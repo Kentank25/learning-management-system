@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mata Pelajaran - SekolahMu</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS -->
+    <script type="module" crossorigin src="/assets/courses-BiNAVoXH.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/css-CNRzkIpI.js">
+    <link rel="modulepreload" crossorigin href="/assets/buddy-DG9rBXAm.js">
+    <link rel="stylesheet" crossorigin href="/assets/css-VQ-JrWX8.css">
+  </head>
+  <body
+    class="bg-surface-50 text-surface-900 font-sans antialiased h-screen flex overflow-hidden"
+  >
+    <!-- Sidebar Overlay -->
+    <div
+      id="sidebar-overlay"
+      class="fixed inset-0 bg-black/50 z-20 hidden md:hidden transition-opacity duration-300 opacity-0"
+    ></div>
+
+    <!-- Sidebar (Moodle-like Navigation) -->
+    <aside
+      id="sidebar"
+      class="w-64 bg-white border-r border-surface-200 flex flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 z-30 shadow-sm"
+    >
+      <!-- Logo Area -->
+      <div class="h-16 flex items-center px-6 border-b border-surface-200">
+        <div
+          class="flex items-center gap-2 text-accent-600 font-bold text-xl tracking-tight"
+        >
+          <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+          <span>Sekolah<span class="text-surface-900">Mu</span></span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <a
+          href="index.html"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+          <span id="nav-dashboard-text">Dashboard</span>
+        </a>
+        <!-- Active State on Courses -->
+        <a
+          href="courses.html"
+          class="flex items-center gap-3 px-3 py-2.5 bg-accent-50 text-accent-600 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="book-open" class="w-5 h-5"></i>
+          <span id="nav-courses-text">Mata Pelajaran</span>
+        </a>
+        <a
+          href="calendar.html"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors hide-sd"
+        >
+          <i data-lucide="calendar" class="w-5 h-5"></i>
+          <span id="nav-calendar-text">Kalender</span>
+        </a>
+        <a
+          href="#"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="award" class="w-5 h-5"></i>
+          <span id="nav-grades-text">Nilai & Rapor</span>
+        </a>
+        <a
+          href="#"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors hide-sd"
+        >
+          <i data-lucide="folder" class="w-5 h-5"></i>
+          <span id="nav-files-text">File Pribadi</span>
+        </a>
+      </nav>
+
+      <!-- Bottom User Actions -->
+      <div class="p-4 border-t border-surface-200">
+        <a
+          href="#"
+          id="logout-btn"
+          class="flex items-center gap-3 px-3 py-2 text-surface-600 hover:text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          Keluar
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+      <!-- Header / Topbar -->
+      <header
+        class="h-16 bg-white border-b border-surface-200 flex items-center justify-between px-4 sm:px-6 z-10 shadow-sm relative"
+      >
+        <div class="flex items-center gap-4">
+          <button
+            id="mobile-menu-btn"
+            class="p-2 text-surface-500 hover:bg-surface-100 rounded-lg md:hidden transition-colors"
+          >
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+          <!-- Search Bar -->
+          <div class="hidden sm:flex items-center relative hide-sd">
+            <i
+              data-lucide="search"
+              class="w-4 h-4 absolute left-3 text-surface-400"
+            ></i>
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Cari materi, tugas, atau kelas..."
+              class="pl-9 pr-4 py-2 w-64 md:w-80 bg-surface-100 border-transparent focus:bg-white focus:border-accent-500 focus:ring-2 focus:ring-accent-200 rounded-full text-sm outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- Header Right: Notifications & Profile -->
+        <div class="flex items-center gap-3">
+          <button
+            id="notification-btn"
+            class="relative p-2 text-surface-500 hover:bg-surface-100 rounded-full transition-colors"
+          >
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span
+              class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"
+            ></span>
+          </button>
+          <button
+            class="relative p-2 text-surface-500 hover:bg-surface-100 rounded-full transition-colors hide-sd"
+          >
+            <i data-lucide="message-square" class="w-5 h-5"></i>
+          </button>
+          <div class="h-8 w-px bg-surface-200 mx-1"></div>
+          <button
+            class="flex items-center gap-2 p-1 pl-2 hover:bg-surface-100 rounded-full transition-colors"
+          >
+            <span id="profile-name" class="text-sm font-medium text-surface-700 hidden sm:block"
+              >Keane</span
+            >
+            <img
+              id="profile-img"
+              src="https://ui-avatars.com/api/?name=Keane&background=fefce8&color=ca8a04"
+              alt="Profile"
+              class="w-8 h-8 rounded-full border border-surface-200"
+            />
+            <i data-lucide="chevron-down" class="w-4 h-4 text-surface-500"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content Scrollable Area: Courses -->
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto space-y-8">
+          <!-- Page Header & Filters -->
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+          >
+            <div>
+              <h1 id="courses-page-title" class="text-2xl font-bold text-surface-900">
+                Mata Pelajaran
+              </h1>
+              <p id="courses-page-desc" class="text-surface-500 text-sm mt-1">
+                Pilih kelas Anda untuk melanjutkan pembelajaran.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <!-- Filter Tabs -->
+              <div
+                id="course-filters"
+                class="bg-white border border-surface-200 rounded-lg p-1 flex text-sm font-medium shadow-sm"
+              >
+                <button
+                  data-filter="all"
+                  class="filter-btn px-4 py-1.5 bg-accent-100 text-accent-700 rounded-md transition-all"
+                >
+                  Semua
+                </button>
+                <button
+                  data-filter="ongoing"
+                  class="filter-btn px-4 py-1.5 text-surface-600 hover:text-surface-900 hover:bg-surface-50 rounded-md transition-all"
+                >
+                  Sedang Berjalan
+                </button>
+                <button
+                  data-filter="completed"
+                  class="filter-btn px-4 py-1.5 text-surface-600 hover:text-surface-900 hover:bg-surface-50 rounded-md transition-all"
+                >
+                  Selesai
+                </button>
+              </div>
+
+              <!-- Sort Button -->
+              <button
+                class="p-2 bg-white border border-surface-200 text-surface-600 hover:bg-surface-50 hover:text-surface-900 rounded-lg shadow-sm transition-colors flex items-center gap-2 text-sm font-medium"
+              >
+                <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                <span class="hidden sm:inline">Filter</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Course Grid -->
+          <div
+            id="courses-grid"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          >
+            <!-- Dirender secara dinamis oleh courses.js -->
+          </div>
+        </div>
+      </main>
+    </div>
+
+        <!-- Script to render Lucide icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom JS -->
+  </body>
+</html>

@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kalender Belajar - SekolahMu</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS -->
+    <script type="module" crossorigin src="/assets/calendar-C7Wqwc6V.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/css-CNRzkIpI.js">
+    <link rel="modulepreload" crossorigin href="/assets/buddy-DG9rBXAm.js">
+    <link rel="stylesheet" crossorigin href="/assets/css-VQ-JrWX8.css">
+  </head>
+  <body
+    class="bg-surface-50 text-surface-900 font-sans antialiased h-screen flex overflow-hidden"
+  >
+    <!-- Sidebar Overlay -->
+    <div
+      id="sidebar-overlay"
+      class="fixed inset-0 bg-black/50 z-20 hidden md:hidden transition-opacity duration-300 opacity-0"
+    ></div>
+
+    <!-- Sidebar (Moodle-like Navigation) -->
+    <aside
+      id="sidebar"
+      class="w-64 bg-white border-r border-surface-200 flex flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 z-30 shadow-sm"
+    >
+      <!-- Logo Area -->
+      <div class="h-16 flex items-center px-6 border-b border-surface-200">
+        <div
+          class="flex items-center gap-2 text-accent-600 font-bold text-xl tracking-tight"
+        >
+          <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+          <span>Sekolah<span class="text-surface-900">Mu</span></span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <a
+          href="index.html"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+          <span id="nav-dashboard-text">Dashboard</span>
+        </a>
+        <a
+          href="courses.html"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="book-open" class="w-5 h-5"></i>
+          <span id="nav-courses-text">Mata Pelajaran</span>
+        </a>
+        <!-- Active State on Calendar -->
+        <a
+          href="calendar.html"
+          class="flex items-center gap-3 px-3 py-2.5 bg-accent-50 text-accent-600 rounded-lg font-medium transition-colors hide-sd"
+        >
+          <i data-lucide="calendar" class="w-5 h-5"></i>
+          <span id="nav-calendar-text">Kalender</span>
+        </a>
+        <a
+          href="#"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="award" class="w-5 h-5"></i>
+          <span id="nav-grades-text">Nilai & Rapor</span>
+        </a>
+        <a
+          href="#"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors hide-sd"
+        >
+          <i data-lucide="folder" class="w-5 h-5"></i>
+          <span id="nav-files-text">File Pribadi</span>
+        </a>
+      </nav>
+
+      <!-- Bottom User Actions -->
+      <div class="p-4 border-t border-surface-200">
+        <a
+          href="#"
+          id="logout-btn"
+          class="flex items-center gap-3 px-3 py-2 text-surface-600 hover:text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          Keluar
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+      <!-- Header / Topbar -->
+      <header
+        class="h-16 bg-white border-b border-surface-200 flex items-center justify-between px-4 sm:px-6 z-10 shadow-sm relative"
+      >
+        <div class="flex items-center gap-4">
+          <button
+            id="mobile-menu-btn"
+            class="p-2 text-surface-500 hover:bg-surface-100 rounded-lg md:hidden transition-colors"
+          >
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+          <!-- Search Bar -->
+          <div class="hidden sm:flex items-center relative hide-sd">
+            <i
+              data-lucide="search"
+              class="w-4 h-4 absolute left-3 text-surface-400"
+            ></i>
+            <input
+              type="text"
+              placeholder="Cari materi, tugas, atau kelas..."
+              class="pl-9 pr-4 py-2 w-64 md:w-80 bg-surface-100 border-transparent focus:bg-white focus:border-accent-500 focus:ring-2 focus:ring-accent-200 rounded-full text-sm outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- Header Right: Notifications & Profile -->
+        <div class="flex items-center gap-3">
+          <button
+            id="notification-btn"
+            class="relative p-2 text-surface-500 hover:bg-surface-100 rounded-full transition-colors"
+          >
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span
+              class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"
+            ></span>
+          </button>
+          <button
+            class="relative p-2 text-surface-500 hover:bg-surface-100 rounded-full transition-colors hide-sd"
+          >
+            <i data-lucide="message-square" class="w-5 h-5"></i>
+          </button>
+          <div class="h-8 w-px bg-surface-200 mx-1"></div>
+          <button
+            class="flex items-center gap-2 p-1 pl-2 hover:bg-surface-100 rounded-full transition-colors"
+          >
+            <span id="profile-name" class="text-sm font-medium text-surface-700 hidden sm:block"
+              >Keane</span
+            >
+            <img
+              id="profile-img"
+              src="https://ui-avatars.com/api/?name=Keane&background=fefce8&color=ca8a04"
+              alt="Profile"
+              class="w-8 h-8 rounded-full border border-surface-200"
+            />
+            <i data-lucide="chevron-down" class="w-4 h-4 text-surface-500"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content Scrollable Area: Calendar -->
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div class="max-w-7xl mx-auto space-y-6">
+          
+          <!-- Page Header -->
+          <div>
+            <h1 id="calendar-page-title" class="text-2xl font-bold text-surface-900">
+              Kalender Belajar
+            </h1>
+            <p id="calendar-page-desc" class="text-surface-500 text-sm mt-1">
+              Pantau jadwal belajar, agenda, dan tugas yang harus dikerjakan.
+            </p>
+          </div>
+
+          <!-- Two Column Grid for Calendar -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left & Middle Column: Interactive Month Grid (Spans 2 columns on lg) -->
+            <div class="lg:col-span-2 space-y-4">
+              <div class="bg-white border border-surface-200 rounded-2xl p-5 shadow-sm space-y-4">
+                <!-- Month & Nav Controls -->
+                <div class="flex items-center justify-between">
+                  <h2 id="calendar-month-year" class="text-lg font-bold text-surface-900">
+                    Mei 2026
+                  </h2>
+                  <div class="flex items-center gap-1">
+                    <button id="prev-month-btn" class="p-2 hover:bg-surface-100 rounded-lg text-surface-500 transition-colors">
+                      <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                    </button>
+                    <button id="next-month-btn" class="p-2 hover:bg-surface-100 rounded-lg text-surface-500 transition-colors">
+                      <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Calendar Week Header -->
+                <div class="grid grid-cols-7 gap-1 text-center text-xs font-bold text-surface-400 uppercase tracking-wider">
+                  <div>Sen</div>
+                  <div>Sel</div>
+                  <div>Rab</div>
+                  <div>Kam</div>
+                  <div>Jum</div>
+                  <div>Sab</div>
+                  <div class="text-red-500">Min</div>
+                </div>
+
+                <!-- Calendar Days Grid -->
+                <div id="calendar-grid" class="grid grid-cols-7 gap-2">
+                  <!-- Rendered dynamically by calendar.js -->
+                </div>
+
+                <!-- Calendar Legends -->
+                <div class="border-t border-surface-100 pt-4 flex flex-wrap gap-4 text-xs font-medium text-surface-500">
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+                    Kelas Virtual / Sesi Belajar
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block"></span>
+                    Tenggat Tugas / Deadline
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 inline-block"></span>
+                    Ujian / Acara Khusus
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Selected Date Agendas Panel -->
+            <div class="space-y-4">
+              <div class="bg-white border border-surface-200 rounded-2xl p-5 shadow-sm flex flex-col h-full min-h-[400px]">
+                <div class="border-b border-surface-100 pb-4 mb-4 flex items-center justify-between">
+                  <div>
+                    <h3 class="font-bold text-surface-900 text-base">Agenda Kegiatan</h3>
+                    <p id="selected-date-str" class="text-xs text-surface-500 mt-0.5">Kamis, 21 Mei 2026</p>
+                  </div>
+                  <i data-lucide="calendar-days" class="w-5 h-5 text-accent-500"></i>
+                </div>
+
+                <!-- Agenda Items Container -->
+                <div id="agenda-container" class="flex-1 space-y-3 overflow-y-auto max-h-[300px] pr-1">
+                  <!-- Rendered dynamically by calendar.js -->
+                </div>
+
+                <!-- Action Button -->
+                <button
+                  id="add-agenda-btn"
+                  class="w-full mt-4 py-2.5 bg-accent-500 hover:bg-accent-600 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                >
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  Tambah Agenda Baru
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+    <!-- Agenda Modal (Hidden by default) -->
+    <div
+      id="agenda-modal"
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300"
+    >
+      <div class="bg-white w-full max-w-md rounded-2xl shadow-xl overflow-hidden transform scale-95 transition-transform duration-300">
+        <div class="px-6 py-4 border-b border-surface-100 flex justify-between items-center bg-surface-50">
+          <h3 class="font-bold text-surface-900 text-base flex items-center gap-2">
+            <i data-lucide="calendar-plus" class="w-5 h-5 text-accent-500"></i>
+            Tambah Agenda Baru
+          </h3>
+          <button id="close-modal-btn" class="p-1.5 text-surface-400 hover:text-surface-600 hover:bg-surface-100 rounded-lg transition-colors">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <form id="agenda-form" class="p-6 space-y-4">
+          <div class="space-y-1">
+            <label for="agenda-title" class="text-xs font-semibold text-surface-700">Nama Kegiatan</label>
+            <input
+              type="text"
+              id="agenda-title"
+              required
+              placeholder="Contoh: Belajar Kelompok Basis Data..."
+              class="w-full px-3 py-2 border border-surface-200 focus:border-accent-500 focus:ring-2 focus:ring-accent-200 rounded-lg text-sm outline-none transition-all"
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label for="agenda-date" class="text-xs font-semibold text-surface-700">Tanggal</label>
+              <input
+                type="date"
+                id="agenda-date"
+                required
+                class="w-full px-3 py-2 border border-surface-200 focus:border-accent-500 focus:ring-2 focus:ring-accent-200 rounded-lg text-sm outline-none transition-all"
+              />
+            </div>
+            <div class="space-y-1">
+              <label for="agenda-time" class="text-xs font-semibold text-surface-700">Waktu (WIB)</label>
+              <input
+                type="time"
+                id="agenda-time"
+                required
+                class="w-full px-3 py-2 border border-surface-200 focus:border-accent-500 focus:ring-2 focus:ring-accent-200 rounded-lg text-sm outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label for="agenda-type" class="text-xs font-semibold text-surface-700">Kategori</label>
+            <select
+              id="agenda-type"
+              required
+              class="w-full px-3 py-2 bg-white border border-surface-200 focus:border-accent-500 focus:ring-2 focus:ring-accent-200 rounded-lg text-sm outline-none transition-all"
+            >
+              <option value="class">Kelas Virtual / Sesi Belajar</option>
+              <option value="deadline">Tenggat Tugas / Deadline</option>
+              <option value="event">Ujian / Acara Khusus</option>
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full py-2.5 bg-accent-500 hover:bg-accent-600 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 mt-2"
+          >
+            Simpan Kegiatan
+          </button>
+        </form>
+      </div>
+    </div>
+
+        <!-- Script to render Lucide icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom JS Modules -->
+  </body>
+</html>

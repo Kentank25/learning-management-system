@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Detail Pelajaran - SekolahMu</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Tailwind CSS -->
+
+    <!-- Canvas Confetti Library for Gamification (SD Only) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script type="module" crossorigin src="/assets/courseDetail-0_bG0b0_.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/css-CNRzkIpI.js">
+    <link rel="modulepreload" crossorigin href="/assets/buddy-DG9rBXAm.js">
+    <link rel="stylesheet" crossorigin href="/assets/css-VQ-JrWX8.css">
+  </head>
+  <body
+    class="bg-surface-50 text-surface-900 font-sans antialiased h-screen flex overflow-hidden"
+  >
+    <!-- Sidebar Overlay -->
+    <div
+      id="sidebar-overlay"
+      class="fixed inset-0 bg-black/50 z-20 hidden md:hidden transition-opacity duration-300 opacity-0"
+    ></div>
+
+    <!-- Sidebar (Moodle-like Navigation) -->
+    <aside
+      id="sidebar"
+      class="w-64 bg-white border-r border-surface-200 flex flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 z-30 shadow-sm"
+    >
+      <!-- Logo Area -->
+      <div class="h-16 flex items-center px-6 border-b border-surface-200">
+        <div
+          class="flex items-center gap-2 text-accent-600 font-bold text-xl tracking-tight"
+        >
+          <i data-lucide="graduation-cap" class="w-6 h-6"></i>
+          <span>Sekolah<span class="text-surface-900">Mu</span></span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <a
+          href="index.html"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+          <span id="nav-dashboard-text">Dashboard</span>
+        </a>
+        <a
+          href="courses.html"
+          class="flex items-center gap-3 px-3 py-2.5 bg-accent-50 text-accent-600 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="book-open" class="w-5 h-5"></i>
+          <span id="nav-courses-text">Mata Pelajaran</span>
+        </a>
+        <a
+          href="calendar.html"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors hide-sd"
+        >
+          <i data-lucide="calendar" class="w-5 h-5"></i>
+          <span id="nav-calendar-text">Kalender</span>
+        </a>
+        <a
+          href="#"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="award" class="w-5 h-5"></i>
+          <span id="nav-grades-text">Nilai & Rapor</span>
+        </a>
+        <a
+          href="#"
+          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors hide-sd"
+        >
+          <i data-lucide="folder" class="w-5 h-5"></i>
+          <span id="nav-files-text">File Pribadi</span>
+        </a>
+      </nav>
+
+      <!-- Bottom User Actions -->
+      <div class="p-4 border-t border-surface-200">
+        <a
+          href="#"
+          id="logout-btn"
+          class="flex items-center gap-3 px-3 py-2 text-surface-600 hover:text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors"
+        >
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          Keluar
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+      <!-- Header / Topbar -->
+      <header
+        class="h-16 bg-white border-b border-surface-200 flex items-center justify-between px-4 sm:px-6 z-10 shadow-sm relative"
+      >
+        <div class="flex items-center gap-4">
+          <button
+            id="mobile-menu-btn"
+            class="p-2 text-surface-500 hover:bg-surface-100 rounded-lg md:hidden transition-colors"
+          >
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+          <!-- Search Bar -->
+          <div class="hidden sm:flex items-center relative hide-sd">
+            <i
+              data-lucide="search"
+              class="w-4 h-4 absolute left-3 text-surface-400"
+            ></i>
+            <input
+              type="text"
+              placeholder="Cari materi, tugas, atau kelas..."
+              class="pl-9 pr-4 py-2 w-64 md:w-80 bg-surface-100 border-transparent focus:bg-white focus:border-accent-500 focus:ring-2 focus:ring-accent-200 rounded-full text-sm outline-none transition-all"
+            />
+          </div>
+        </div>
+
+        <!-- Header Right: Notifications & Profile -->
+        <div class="flex items-center gap-3">
+          <button
+            id="notification-btn"
+            class="relative p-2 text-surface-500 hover:bg-surface-100 rounded-full transition-colors"
+          >
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span
+              class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"
+            ></span>
+          </button>
+          <button
+            class="relative p-2 text-surface-500 hover:bg-surface-100 rounded-full transition-colors hide-sd"
+          >
+            <i data-lucide="message-square" class="w-5 h-5"></i>
+          </button>
+          <div class="h-8 w-px bg-surface-200 mx-1"></div>
+          <button
+            class="flex items-center gap-2 p-1 pl-2 hover:bg-surface-100 rounded-full transition-colors"
+          >
+            <span id="profile-name" class="text-sm font-medium text-surface-700 hidden sm:block"
+              >Keane</span
+            >
+            <img
+              id="profile-img"
+              src="https://ui-avatars.com/api/?name=Keane&background=fefce8&color=ca8a04"
+              alt="Profile"
+              class="w-8 h-8 rounded-full border border-surface-200"
+            />
+            <i data-lucide="chevron-down" class="w-4 h-4 text-surface-500"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content Scrollable Area: Detail Pelajaran -->
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative">
+        <div class="max-w-7xl mx-auto space-y-6">
+          
+          <!-- Course Banner Header -->
+          <div
+            id="course-banner"
+            class="bg-gradient-to-r from-accent-500 to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-md border relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px]"
+          >
+            <div class="absolute inset-0 bg-black/10 z-0"></div>
+            <!-- Decorative background elements -->
+            <div class="absolute top-0 right-0 -mr-8 -mt-8 w-48 h-48 bg-white opacity-10 rounded-full blur-2xl"></div>
+            
+            <!-- Breadcrumb -->
+            <div class="relative z-10 flex items-center gap-2 text-xs font-semibold text-white/80 mb-2">
+              <a href="courses.html" class="hover:text-white transition-colors flex items-center gap-1">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                <span id="breadcrumb-parent">Mata Pelajaran</span>
+              </a>
+              <span>/</span>
+              <span id="breadcrumb-current" class="text-white">Detail</span>
+            </div>
+
+            <!-- Title & Teacher -->
+            <div class="relative z-10">
+              <span id="course-badge" class="bg-white/20 backdrop-blur-sm text-xs font-semibold px-2.5 py-1 rounded-full mb-3 inline-block">SMK RPL</span>
+              <h1 id="course-title" class="text-2xl sm:text-3xl font-extrabold tracking-tight">Pemrograman Basis Data</h1>
+              <p id="course-teacher" class="text-white/85 text-xs sm:text-sm font-medium mt-1 flex items-center gap-1.5">
+                <i data-lucide="user" class="w-4 h-4"></i>
+                Pengajar: Pak Budi Santoso
+              </p>
+            </div>
+          </div>
+
+          <!-- Description & Tabs Controller -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <!-- Left & Middle: Tab Content (Spans 2 cols on lg) -->
+            <div class="lg:col-span-2 space-y-6">
+              <!-- Course Description -->
+              <div class="bg-white border border-surface-200 rounded-2xl p-5 shadow-sm space-y-2">
+                <h3 class="font-bold text-surface-900 text-base">Deskripsi Kelas</h3>
+                <p id="course-desc" class="text-sm text-surface-600 leading-relaxed">
+                  Materi kejuruan RPL berfokus pada perancangan basis data relasional. Anda akan mempelajari normalisasi 1NF-3NF, bahasa query SQL (DDL, DML, DCL), indexing, relasi tabel, dan optimalisasi query MySQL.
+                </p>
+              </div>
+
+              <!-- Persona Tabs Navigation -->
+              <div class="bg-white border border-surface-200 rounded-2xl p-1.5 shadow-sm flex text-sm font-semibold scroll-x overflow-x-auto gap-1">
+                <!-- Tabs are injected dynamically by course-detail.js -->
+                <div id="tabs-navigation" class="flex w-full"></div>
+              </div>
+
+              <!-- Tab Content Container -->
+              <div id="tab-content" class="space-y-4">
+                <!-- Rendered dynamically by course-detail.js -->
+              </div>
+            </div>
+
+            <!-- Right Column: Learning Info & Widgets -->
+            <div class="space-y-6">
+              <!-- General Info Widget -->
+              <div class="bg-white border border-surface-200 rounded-2xl p-5 shadow-sm space-y-4">
+                <h3 class="font-bold text-surface-900 text-base border-b border-surface-100 pb-3">Informasi Belajar</h3>
+                
+                <div class="space-y-3.5">
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-surface-500 flex items-center gap-2">
+                      <i data-lucide="award" class="w-4.5 h-4.5 text-accent-500"></i>
+                      Status Pelajaran
+                    </span>
+                    <span id="info-status" class="font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full text-xs">Aktif</span>
+                  </div>
+                  
+                  <div class="flex items-center justify-between text-sm">
+                    <span class="text-surface-500 flex items-center gap-2">
+                      <i data-lucide="book-open-check" class="w-4.5 h-4.5 text-accent-500"></i>
+                      Modul Selesai
+                    </span>
+                    <span id="info-modules-count" class="font-bold text-surface-900">3 / 4 Modul</span>
+                  </div>
+                  
+                  <div class="flex items-center justify-between text-sm hide-sd">
+                    <span class="text-surface-500 flex items-center gap-2">
+                      <i data-lucide="hourglass" class="w-4.5 h-4.5 text-accent-500"></i>
+                      Total SKS / Beban
+                    </span>
+                    <span id="info-weight" class="font-bold text-surface-900">Smt 4</span>
+                  </div>
+                </div>
+
+                <!-- Global Progress Bar inside info widget -->
+                <div class="border-t border-surface-100 pt-4 mt-2">
+                  <div class="flex justify-between text-xs font-semibold text-surface-600 mb-1.5">
+                    <span>Total Progres Belajar</span>
+                    <span id="info-progress-pct" class="text-accent-600 font-bold">75%</span>
+                  </div>
+                  <div class="w-full bg-surface-100 rounded-full h-2">
+                    <div id="info-progress-bar" class="bg-accent-500 h-2 rounded-full" style="width: 75%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SD-Only Bintang Prestasi Cilik Widget -->
+              <div id="sd-star-widget" class="bg-gradient-to-br from-yellow-50 to-amber-100 border border-yellow-200 rounded-2xl p-5 shadow-sm hidden">
+                <h3 class="text-sm font-bold text-amber-800 flex items-center gap-2 mb-3">
+                  <i data-lucide="star" class="w-5 h-5 text-amber-500 fill-amber-400"></i>
+                  Poin Bintang Saya
+                </h3>
+                <div class="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-yellow-100 flex items-center justify-between">
+                  <div>
+                    <span class="text-[10px] text-amber-700 uppercase tracking-wider font-bold">Total Kuis Berhasil</span>
+                    <span id="sd-stars-count" class="text-2xl font-black text-amber-600 block mt-0.5">0 Bintang ⭐</span>
+                  </div>
+                  <div class="p-2 bg-amber-100 rounded-xl text-amber-600">
+                    <i data-lucide="sparkles" class="w-6 h-6 animate-pulse"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Kuliah-Only Academic Shortcuts widget -->
+              <div id="kuliah-academic-widget" class="bg-white border border-surface-200 rounded-2xl p-5 shadow-sm hidden">
+                <h3 class="font-bold text-surface-900 text-base border-b border-surface-100 pb-3 mb-3">Asisten Kelas</h3>
+                <div class="space-y-3 text-sm">
+                  <a href="#" class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all group">
+                    <span class="p-2 bg-indigo-100 text-indigo-600 rounded-lg group-hover:scale-105 transition-transform">
+                      <i data-lucide="video" class="w-4 h-4"></i>
+                    </span>
+                    <div>
+                      <span class="font-semibold text-indigo-950 block">Kuliah Zoom Terintegrasi</span>
+                      <span class="text-[10px] text-surface-500">Klik untuk masuk kelas virtual</span>
+                    </div>
+                  </a>
+                  <a href="#" class="flex items-center gap-2.5 p-2.5 rounded-xl hover:bg-indigo-50 border border-transparent hover:border-indigo-100 transition-all group">
+                    <span class="p-2 bg-indigo-100 text-indigo-600 rounded-lg group-hover:scale-105 transition-transform">
+                      <i data-lucide="book-open" class="w-4 h-4"></i>
+                    </span>
+                    <div>
+                      <span class="font-semibold text-indigo-950 block">Rencana Pembelajaran (RPS)</span>
+                      <span class="text-[10px] text-surface-500">Unduh PDF silabus lengkap</span>
+                    </div>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+
+        <!-- Script to render Lucide icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom JS Modules -->
+  </body>
+</html>
