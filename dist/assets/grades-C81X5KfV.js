@@ -1,7 +1,7 @@
-import"./css-YCSnT0AX.js";import{n as e,o as t}from"./buddy-BMpf7Vy_.js";(function(){let n=localStorage.getItem(`edu-level`)||`smk`;localStorage.getItem(`username`);let r=t[n],i=document.getElementById(`nav-dashboard-text`),a=document.getElementById(`nav-courses-text`),o=document.getElementById(`nav-calendar-text`),s=document.getElementById(`nav-grades-text`),c=document.getElementById(`nav-files-text`);i&&(i.textContent=r.dashboard),a&&(a.textContent=r.courses),o&&(o.textContent=r.calendar),s&&(s.textContent=r.grades),c&&(c.textContent=r.files);let l=document.getElementById(`grades-page-title`),u=document.getElementById(`grades-page-desc`),d=document.getElementById(`semester-filter-container`);n===`sd`?(l&&(l.textContent=`Rapor Bintang Prestasi 🌟`),u&&(u.textContent=`Kumpulkan Bintang Emas dari kuis seru dan koleksi lencana belajarmu!`),d&&d.classList.add(`hidden`)):n===`kuliah`?(l&&(l.textContent=`Kartu Hasil Studi (KHS) 🎓`),u&&(u.textContent=`Lihat pencapaian Indeks Prestasi Kumulatif, beban SKS, dan evaluasi semester.`),d&&d.classList.remove(`hidden`)):(l&&(l.textContent=`Laporan Hasil Belajar (Rapor) 📝`),u&&(u.textContent=`Pantau nilai akademik kejuruan, kompetensi keahlian, dan evaluasi wali kelas.`),d&&d.classList.add(`hidden`));let f=document.getElementById(`grades-content-area`),p=e[n]||[],m=()=>{if(!f)return;let e=0,t={};p.forEach(n=>{let r=parseInt(localStorage.getItem(`kuis-stars-${n.id}`)||0);t[n.id]=r,e+=r});let n=[{id:1,name:`Juara Angka 🔢`,desc:`Selesaikan kuis Matematika Ceria dengan 10 Bintang`,icon:`calculator`,color:`bg-sky-100 text-sky-600 border-sky-200`,unlocked:t[1]>=10},{id:2,name:`Kutu Buku Cilik 📖`,desc:`Selesaikan kuis Bahasa Indonesia dengan 10 Bintang`,icon:`book-open`,color:`bg-emerald-100 text-emerald-600 border-emerald-200`,unlocked:t[2]>=10},{id:3,name:`Pelukis Hebat 🎨`,desc:`Menggambar & Mewarnai mencapai progres 100%`,icon:`palette`,color:`bg-purple-100 text-purple-600 border-purple-200`,unlocked:(localStorage.getItem(`progress-course-3`)||100)==100},{id:4,name:`Sahabat Garuda 🦅`,desc:`Selesaikan kuis Pendidikan Pancasila dengan 10 Bintang`,icon:`heart`,color:`bg-rose-100 text-rose-600 border-rose-200`,unlocked:t[4]>=10}],r=n.filter(e=>e.unlocked).length,i=`
+import"./css-Cl0y6LQG.js";import{n as e,o as t}from"./buddy-vJ5S9m2q.js";(function(){let n=localStorage.getItem(`edu-level`)||`smk`;localStorage.getItem(`username`);let r=t[n],i=document.getElementById(`nav-dashboard-text`),a=document.getElementById(`nav-courses-text`),o=document.getElementById(`nav-calendar-text`),s=document.getElementById(`nav-grades-text`),c=document.getElementById(`nav-files-text`);i&&(i.textContent=r.dashboard),a&&(a.textContent=r.courses),o&&(o.textContent=r.calendar),s&&(s.textContent=r.grades),c&&(c.textContent=r.files);let l=document.getElementById(`grades-page-title`),u=document.getElementById(`grades-page-desc`),d=document.getElementById(`semester-filter-container`);n===`sd`?(l&&(l.textContent=`Rapor Bintang Prestasi 🌟`),u&&(u.textContent=`Kumpulkan Bintang Emas dari kuis seru dan koleksi lencana belajarmu!`),d&&d.classList.add(`hidden`)):n===`kuliah`?(l&&(l.textContent=`Kartu Hasil Studi (KHS) 🎓`),u&&(u.textContent=`Lihat pencapaian Indeks Prestasi Kumulatif, beban SKS, dan evaluasi semester.`),d&&d.classList.remove(`hidden`)):(l&&(l.textContent=`Laporan Hasil Belajar (Rapor) 📝`),u&&(u.textContent=`Pantau nilai akademik kejuruan, kompetensi keahlian, dan evaluasi wali kelas.`),d&&d.classList.add(`hidden`));let f=document.getElementById(`grades-content-area`),p=e[n]||[],m=()=>{if(!f)return;let e=0,t={};p.forEach(n=>{let r=parseInt(localStorage.getItem(`kuis-stars-${n.id}`)||0);t[n.id]=r,e+=r});let n=[{id:1,name:`Juara Angka 🔢`,desc:`Selesaikan kuis Matematika Ceria dengan 10 Bintang`,icon:`calculator`,color:`bg-sky-100 text-sky-600 border-sky-200`,unlocked:t[1]>=10},{id:2,name:`Kutu Buku Cilik 📖`,desc:`Selesaikan kuis Bahasa Indonesia dengan 10 Bintang`,icon:`book-open`,color:`bg-emerald-100 text-emerald-600 border-emerald-200`,unlocked:t[2]>=10},{id:3,name:`Pelukis Hebat 🎨`,desc:`Menggambar & Mewarnai mencapai progres 100%`,icon:`palette`,color:`bg-purple-100 text-purple-600 border-purple-200`,unlocked:(localStorage.getItem(`progress-course-3`)||100)==100},{id:4,name:`Sahabat Garuda 🦅`,desc:`Selesaikan kuis Pendidikan Pancasila dengan 10 Bintang`,icon:`heart`,color:`bg-rose-100 text-rose-600 border-rose-200`,unlocked:t[4]>=10}],r=n.filter(e=>e.unlocked).length,i=`
       <!-- Header stats -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gradient-to-br from-sky-400 to-blue-500 text-white rounded-2xl p-5 shadow-sm border border-sky-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-sky-400 to-blue-500 text-white rounded-2xl p-5 shadow-lg border border-sky-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-sky-100">Bintang Terkumpul</span>
             <span class="text-3xl font-black block mt-1">${e} Bintang ⭐</span>
@@ -11,7 +11,7 @@ import"./css-YCSnT0AX.js";import{n as e,o as t}from"./buddy-BMpf7Vy_.js";(functi
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-yellow-400 to-amber-500 text-white rounded-2xl p-5 shadow-sm border border-yellow-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-yellow-400 to-amber-500 text-white rounded-2xl p-5 shadow-lg border border-yellow-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-yellow-100">Lencana Kehormatan</span>
             <span class="text-3xl font-black block mt-1">${r} / ${n.length} Didapat 🏆</span>
@@ -21,7 +21,7 @@ import"./css-YCSnT0AX.js";import{n as e,o as t}from"./buddy-BMpf7Vy_.js";(functi
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-2xl p-5 shadow-sm border border-emerald-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-2xl p-5 shadow-lg border border-emerald-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-emerald-100">Evaluasi Belajar</span>
             <span class="text-lg font-bold block mt-2">Belajar Sangat Ceria & Aktif!</span>
@@ -110,7 +110,7 @@ import"./css-YCSnT0AX.js";import{n as e,o as t}from"./buddy-BMpf7Vy_.js";(functi
       `;n.push(l)});let r=Math.round(e/t)||0;f.innerHTML=`
       <!-- Header stats -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gradient-to-br from-amber-400 to-amber-600 text-white rounded-2xl p-5 shadow-sm border border-amber-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-amber-400 to-amber-600 text-white rounded-2xl p-5 shadow-lg border border-amber-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-amber-100">Rata-rata Rapor</span>
             <span class="text-3xl font-black block mt-1">${r} / 100</span>
@@ -120,7 +120,7 @@ import"./css-YCSnT0AX.js";import{n as e,o as t}from"./buddy-BMpf7Vy_.js";(functi
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl p-5 shadow-sm border border-indigo-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl p-5 shadow-lg border border-indigo-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-indigo-100">Status Kelulusan</span>
             <span class="text-xl font-black block mt-2">${r>=75?`Kompeten Seutuhnya ✅`:`Tingkatkan Nilai Kompetensi`}</span>
@@ -130,7 +130,7 @@ import"./css-YCSnT0AX.js";import{n as e,o as t}from"./buddy-BMpf7Vy_.js";(functi
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-sm border border-emerald-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-lg border border-emerald-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-emerald-100">Predikat Akademik</span>
             <span class="text-2xl font-black block mt-1">${r>=85?`Sangat Baik (A)`:`Baik (B)`}</span>
@@ -188,7 +188,7 @@ import"./css-YCSnT0AX.js";import{n as e,o as t}from"./buddy-BMpf7Vy_.js";(functi
       `;r.push(u)});let a=t/n||3.85;f.innerHTML=`
       <!-- Header stats -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl p-5 shadow-sm border border-indigo-500 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl p-5 shadow-lg border border-indigo-500 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-indigo-100">IPK Semester (IPS)</span>
             <span class="text-3xl font-black block mt-1">${a.toFixed(2)} <span class="text-sm font-medium text-indigo-300">/ 4.00</span></span>
@@ -198,7 +198,7 @@ import"./css-YCSnT0AX.js";import{n as e,o as t}from"./buddy-BMpf7Vy_.js";(functi
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-violet-600 to-violet-800 text-white rounded-2xl p-5 shadow-sm border border-violet-500 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-violet-600 to-violet-800 text-white rounded-2xl p-5 shadow-lg border border-violet-500 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-violet-100">Beban SKS Semester</span>
             <span class="text-3xl font-black block mt-1">${n} SKS</span>
@@ -208,7 +208,7 @@ import"./css-YCSnT0AX.js";import{n as e,o as t}from"./buddy-BMpf7Vy_.js";(functi
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-sm border border-emerald-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-lg border border-emerald-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-emerald-100">Predikat Kelulusan</span>
             <span class="text-2xl font-black block mt-1">${a>=3.51?`Dengan Pujian (Cumlaude)`:`Sangat Memuaskan`}</span>

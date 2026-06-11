@@ -98,59 +98,87 @@ import { sidebarTexts } from './db.js';
 
     const iconAccent = eduLevel === 'sd' ? 'text-sky-500' : (eduLevel === 'kuliah' ? 'text-indigo-600' : 'text-amber-500');
 
+    // Calculate capacity
+    let totalBytes = 0;
+    files.forEach(f => {
+      let sizeNum = parseFloat(f.size);
+      if (f.size.includes('KB')) totalBytes += sizeNum * 1024;
+      if (f.size.includes('MB')) totalBytes += sizeNum * 1024 * 1024;
+    });
+    const currentMB = (totalBytes / (1024 * 1024)).toFixed(2);
+
     let sidebarFoldersHTML = '';
-    if (eduLevel === 'smk') {
-      sidebarFoldersHTML = `
-        <div class="space-y-2.5">
-          <span class="text-xs uppercase font-extrabold text-surface-400 block px-2">Folder Saya</span>
-          <div class="space-y-1">
-            <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-700 bg-amber-50/50 text-amber-700 border border-amber-100 rounded-xl text-left text-xs font-bold transition-all">
-              <i data-lucide="folder-open" class="w-4 h-4"></i> / root
-            </button>
-            <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
-              <i data-lucide="folder" class="w-4 h-4"></i> Projek-Web
-            </button>
-            <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
-              <i data-lucide="folder" class="w-4 h-4"></i> Tugas-BasisData
-            </button>
-          </div>
-        </div>
+    if (eduLevel === 'smk' || eduLevel === 'kuliah') {
+      const isKuliah = eduLevel === 'kuliah';
+      const limitGB = isKuliah ? 15 : 10;
+      const capacityPct = Math.min(((currentMB / limitGB) * 100), 100).toFixed(1);
+      const strokeDasharray = 226.2;
+      const strokeDashoffset = strokeDasharray - (strokeDasharray * capacityPct) / 100;
+      
+      const gradientId = isKuliah ? 'indigo-grad' : 'amber-grad';
+      const stopStartColor = isKuliah ? '#6366f1' : '#f59e0b';
+      const stopEndColor = isKuliah ? '#4338ca' : '#b45309';
+
+      const folderListHTML = isKuliah ? `
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-700 bg-indigo-50/50 text-indigo-700 border border-indigo-100 rounded-xl text-left text-xs font-bold transition-all">
+          <i data-lucide="folder-open" class="w-4 h-4"></i> / Drive Utama
+        </button>
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
+          <i data-lucide="folder" class="w-4 h-4"></i> Draf-Skripsi
+        </button>
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
+          <i data-lucide="folder" class="w-4 h-4"></i> Jurnal-Riset
+        </button>
+      ` : `
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-700 bg-amber-50/50 text-amber-700 border border-amber-100 rounded-xl text-left text-xs font-bold transition-all">
+          <i data-lucide="folder-open" class="w-4 h-4"></i> / root
+        </button>
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
+          <i data-lucide="folder" class="w-4 h-4"></i> Projek-Web
+        </button>
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
+          <i data-lucide="folder" class="w-4 h-4"></i> Tugas-BasisData
+        </button>
       `;
-    } else if (eduLevel === 'kuliah') {
-      // Calculate capacity
-      let totalBytes = 0;
-      files.forEach(f => {
-        let sizeNum = parseFloat(f.size);
-        if (f.size.includes('KB')) totalBytes += sizeNum * 1024;
-        if (f.size.includes('MB')) totalBytes += sizeNum * 1024 * 1024;
-      });
-      const currentMB = (totalBytes / (1024 * 1024)).toFixed(2);
-      const capacityPct = Math.min(((currentMB / 15) * 100), 100).toFixed(1);
 
       sidebarFoldersHTML = `
         <div class="space-y-5">
           <div class="space-y-2.5">
             <span class="text-xs uppercase font-extrabold text-surface-400 block px-2">Folder Saya</span>
             <div class="space-y-1">
-              <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-700 bg-indigo-50/50 text-indigo-700 border border-indigo-100 rounded-xl text-left text-xs font-bold transition-all">
-                <i data-lucide="folder-open" class="w-4 h-4"></i> / Drive Utama
-              </button>
-              <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
-                <i data-lucide="folder" class="w-4 h-4"></i> Draf-Skripsi
-              </button>
-              <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
-                <i data-lucide="folder" class="w-4 h-4"></i> Jurnal-Riset
-              </button>
+              ${folderListHTML}
             </div>
           </div>
           
-          <!-- Capacity Widget -->
-          <div class="border-t border-surface-150 pt-4 px-2 space-y-2">
-            <span class="text-xs font-bold text-surface-800 block">Kapasitas Cloud</span>
-            <div class="w-full bg-surface-100 rounded-full h-2">
-              <div class="bg-indigo-600 h-2 rounded-full" style="width: ${capacityPct}%"></div>
+          <!-- Capacity Widget with Radial Progress Ring -->
+          <div class="border-t border-surface-150 pt-5 px-1 flex flex-col items-center text-center space-y-3">
+            <span class="text-xs font-extrabold text-surface-400 uppercase tracking-wider block self-start">Kapasitas Cloud</span>
+            
+            <div class="relative w-28 h-28 flex items-center justify-center">
+              <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <!-- Outer Track -->
+                <circle cx="50" cy="50" r="36" stroke="var(--color-surface-100)" stroke-width="7" fill="transparent" />
+                <!-- Progress Ring -->
+                <circle cx="50" cy="50" r="36" stroke="url(#${gradientId})" stroke-width="7" fill="transparent" 
+                  stroke-dasharray="${strokeDasharray}" stroke-dashoffset="${strokeDashoffset}" stroke-linecap="round" 
+                  class="transition-all duration-1000" />
+                <defs>
+                  <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="${stopStartColor}" />
+                    <stop offset="100%" stop-color="${stopEndColor}" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="absolute flex flex-col items-center justify-center">
+                <span class="text-lg font-black text-surface-900 leading-none">${capacityPct}%</span>
+                <span class="text-[9px] font-bold text-surface-400 mt-1 uppercase tracking-tight">Terpakai</span>
+              </div>
             </div>
-            <span class="text-[10px] text-surface-400 font-semibold block">${currentMB} MB dari 15 GB digunakan (${capacityPct}%)</span>
+            
+            <div class="space-y-0.5">
+              <span class="text-xs font-bold text-surface-700 block">${currentMB} MB dari ${limitGB} GB digunakan</span>
+              <span class="text-[10px] text-surface-400 font-semibold block">Penyimpanan Pribadi</span>
+            </div>
           </div>
         </div>
       `;

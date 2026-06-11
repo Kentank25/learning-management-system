@@ -34,25 +34,47 @@ import { sidebarTexts, scheduleData, deadlinesData, progressData } from './db.js
   const bannerTitle = document.getElementById('banner-title');
   const bannerDesc = document.getElementById('banner-desc');
   const bannerBadgeContainer = document.getElementById('banner-badge-container');
+  const bannerContainer = document.getElementById('welcome-banner-container');
 
   if (eduLevel === 'sd') {
-    if (bannerTitle) bannerTitle.innerHTML = `Halo kembali, ${username}! 🌟`;
-    if (bannerDesc) bannerDesc.innerHTML = `Hari ini kamu memiliki <strong>2 tugas seru</strong> yang harus diselesaikan. Yuk, selesaikan sekarang dan kumpulkan poinmu!`;
+    if (bannerContainer) bannerContainer.className = 'bg-gradient-sd rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-sky-300 relative overflow-hidden hover-lift';
+    if (bannerTitle) {
+      bannerTitle.className = 'text-2xl sm:text-3xl font-extrabold tracking-tight mb-2';
+      bannerTitle.innerHTML = `Halo kembali, ${username}! 🌟`;
+    }
+    if (bannerDesc) {
+      bannerDesc.className = 'text-sky-50 max-w-xl text-sm sm:text-base leading-relaxed';
+      bannerDesc.innerHTML = `Hari ini kamu memiliki <strong>2 tugas seru</strong> yang harus diselesaikan. Yuk, selesaikan sekarang dan kumpulkan poinmu!`;
+    }
     if (bannerBadgeContainer) {
-      bannerBadgeContainer.innerHTML = `<i data-lucide="award" class="w-12 h-12 text-sky-500"></i>`;
+      bannerBadgeContainer.innerHTML = `<i data-lucide="award" class="w-12 h-12 text-sky-400 drop-shadow-[0_4px_10px_rgba(255,255,255,0.3)]"></i>`;
     }
   } else if (eduLevel === 'kuliah') {
-    if (bannerTitle) bannerTitle.innerHTML = `Selamat datang di Portal, ${username}. 🎓`;
-    if (bannerDesc) bannerDesc.innerHTML = `Anda memiliki <strong>2 tugas kuliah</strong> dengan tenggat waktu hari ini. Silakan periksa kelengkapan berkas submisi Anda.`;
+    if (bannerContainer) bannerContainer.className = 'bg-gradient-kuliah rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-indigo-500 relative overflow-hidden hover-lift';
+    if (bannerTitle) {
+      bannerTitle.className = 'text-2xl sm:text-3xl font-extrabold tracking-tight mb-2';
+      bannerTitle.innerHTML = `Selamat datang di Portal, ${username}. 🎓`;
+    }
+    if (bannerDesc) {
+      bannerDesc.className = 'text-indigo-150 max-w-xl text-sm sm:text-base leading-relaxed';
+      bannerDesc.innerHTML = `Anda memiliki <strong>2 tugas kuliah</strong> dengan tenggat waktu hari ini. Silakan periksa kelengkapan berkas submisi Anda.`;
+    }
     if (bannerBadgeContainer) {
-      bannerBadgeContainer.innerHTML = `<i data-lucide="book-open" class="w-12 h-12 text-indigo-600"></i>`;
+      bannerBadgeContainer.innerHTML = `<i data-lucide="book-open" class="w-12 h-12 text-indigo-300 drop-shadow-[0_4px_10px_rgba(99,102,241,0.3)]"></i>`;
     }
   } else {
     // SMK (Default)
-    if (bannerTitle) bannerTitle.innerHTML = `Selamat datang kembali, ${username}! 👋`;
-    if (bannerDesc) bannerDesc.innerHTML = `Anda memiliki <strong>2 tugas</strong> yang tenggat waktunya hari ini. Mari selesaikan proyek kreatif Anda dan pertahankan nilai luar biasa itu!`;
+    if (bannerContainer) bannerContainer.className = 'bg-gradient-smk rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-amber-400 relative overflow-hidden hover-lift';
+    if (bannerTitle) {
+      bannerTitle.className = 'text-2xl sm:text-3xl font-extrabold tracking-tight mb-2';
+      bannerTitle.innerHTML = `Selamat datang kembali, ${username}! 👋`;
+    }
+    if (bannerDesc) {
+      bannerDesc.className = 'text-amber-50 max-w-xl text-sm sm:text-base leading-relaxed';
+      bannerDesc.innerHTML = `Anda memiliki <strong>2 tugas</strong> yang tenggat waktunya hari ini. Mari selesaikan proyek kreatif Anda dan pertahankan nilai luar biasa itu!`;
+    }
     if (bannerBadgeContainer) {
-      bannerBadgeContainer.innerHTML = `<i data-lucide="rocket" class="w-12 h-12 text-amber-600"></i>`;
+      bannerBadgeContainer.innerHTML = `<i data-lucide="rocket" class="w-12 h-12 text-amber-300 drop-shadow-[0_4px_10px_rgba(245,158,11,0.3)]"></i>`;
     }
   }
 
@@ -101,7 +123,7 @@ import { sidebarTexts, scheduleData, deadlinesData, progressData } from './db.js
             ${lineClass}
           </div>
           <div class="pb-4 w-full">
-            <div class="bg-white rounded-xl p-4 border border-surface-200 hover:shadow-md transition-all group cursor-pointer ${itemBorderColor} ${item.statusType !== 'active' ? 'opacity-70 hover:opacity-100' : ''}">
+            <div class="bg-white rounded-xl p-4 border border-surface-200 hover:shadow-md transition-all hover-lift group cursor-pointer ${itemBorderColor} ${item.statusType !== 'active' ? 'opacity-70 hover:opacity-100' : ''}">
               <div class="flex justify-between items-start mb-2">
                 <div>
                   <span class="text-xs font-bold ${timeTextColor} mb-1 block">${item.time}</span>
@@ -136,7 +158,7 @@ import { sidebarTexts, scheduleData, deadlinesData, progressData } from './db.js
     deadlinesContainer.innerHTML = '';
     currentDeadlines.items.forEach(task => {
       const taskHTML = `
-        <div class="p-3 border rounded-xl transition-colors cursor-pointer ${task.borderColor}">
+        <div class="p-3 border rounded-xl transition-all hover-lift cursor-pointer ${task.borderColor}">
           <h4 class="font-semibold text-sm text-surface-900 mb-1">${task.title}</h4>
           <p class="text-xs text-surface-500 mb-2">${task.subject}</p>
           <div class="flex items-center justify-between text-xs font-medium">

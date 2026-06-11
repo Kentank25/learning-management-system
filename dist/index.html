@@ -14,10 +14,10 @@
     />
 
     <!-- Tailwind CSS -->
-    <script type="module" crossorigin src="/assets/main-BuqEUdlJ.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/css-YCSnT0AX.js">
-    <link rel="modulepreload" crossorigin href="/assets/buddy-BMpf7Vy_.js">
-    <link rel="stylesheet" crossorigin href="/assets/css-DMgXDBPF.css">
+    <script type="module" crossorigin src="/assets/main-Bw_tATAU.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/css-Cl0y6LQG.js">
+    <link rel="modulepreload" crossorigin href="/assets/buddy-vJ5S9m2q.js">
+    <link rel="stylesheet" crossorigin href="/assets/css-B4L9_Xu5.css">
   </head>
   <body
     class="bg-surface-50 text-surface-900 font-sans antialiased h-screen flex overflow-hidden"
@@ -25,10 +25,15 @@
     <script>
       (function() {
         const level = localStorage.getItem('edu-level');
+        document.body.classList.remove('theme-sd', 'theme-kuliah');
         if (level === 'sd') document.body.classList.add('theme-sd');
         else if (level === 'kuliah') document.body.classList.add('theme-kuliah');
       })();
     </script>
+    <!-- Glowing Background Blobs -->
+    <div class="fixed -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-[120px] opacity-20 -z-20 bg-accent-300 transition-colors duration-1000 pointer-events-none"></div>
+    <div class="fixed -bottom-40 -right-40 w-[500px] h-[500px] rounded-full blur-[120px] opacity-25 -z-20 bg-primary-300 transition-colors duration-1000 pointer-events-none"></div>
+
     <!-- Sidebar Overlay -->
     <div
       id="sidebar-overlay"
@@ -38,7 +43,7 @@
     <!-- Sidebar (Moodle-like Navigation) -->
     <aside
       id="sidebar"
-      class="w-64 bg-white border-r border-surface-200 flex flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-300 z-30 shadow-sm"
+      class="w-64 bg-white/70 backdrop-blur-xl border-r border-white/40 flex flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-all duration-300 z-30 shadow-xl"
     >
       <!-- Logo Area -->
       <div class="h-16 flex items-center px-6 border-b border-surface-200">
@@ -54,7 +59,7 @@
       <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
         <a
           href="index.html"
-          class="flex items-center gap-3 px-3 py-2.5 bg-accent-50 text-accent-600 rounded-lg font-medium transition-colors"
+          class="flex items-center gap-3 px-3 py-2.5 bg-accent-50 text-accent-600 rounded-lg font-semibold transition-colors sidebar-active-indicator"
         >
           <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
           <span id="nav-dashboard-text">Dashboard</span>
@@ -106,7 +111,7 @@
     <div class="flex-1 flex flex-col h-full overflow-hidden relative">
       <!-- Header / Topbar -->
       <header
-        class="h-16 bg-white border-b border-surface-200 flex items-center justify-between px-4 sm:px-6 z-10 shadow-sm relative"
+        class="h-16 bg-white/70 backdrop-blur-md border-b border-white/40 flex items-center justify-between px-4 sm:px-6 z-30 shadow-sm relative"
       >
         <div class="flex items-center gap-4">
           <button
@@ -147,7 +152,7 @@
             <!-- Notification Dropdown Panel -->
             <div
               id="notification-dropdown"
-              class="hidden absolute right-0 mt-2 w-80 bg-white/95 backdrop-blur-md border border-surface-200 rounded-2xl shadow-xl p-4 z-50 text-sm space-y-3"
+              class="hidden absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-sm bg-white/90 backdrop-blur-xl border border-white/60 rounded-2xl shadow-2xl p-4 z-50 text-sm space-y-3 animate-fade-in"
             >
               <div class="flex items-center justify-between border-b border-surface-100 pb-2">
                 <h4 class="font-bold text-surface-900">Pemberitahuan</h4>
@@ -188,7 +193,7 @@
             <!-- Profile Dropdown Menu -->
             <div
               id="profile-dropdown"
-              class="hidden absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-md border border-surface-200 rounded-2xl shadow-xl p-2 z-50 text-sm space-y-1"
+              class="hidden absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-56 bg-white/90 backdrop-blur-xl border border-white/60 rounded-2xl shadow-2xl p-2 z-50 text-sm space-y-1 animate-fade-in"
             >
               <div class="px-3 py-2 border-b border-surface-100">
                 <span class="font-bold text-surface-900 block" id="dropdown-username">Keane</span>
@@ -237,6 +242,7 @@
         <div class="max-w-7xl mx-auto space-y-6">
           <!-- Welcome Banner -->
           <div
+            id="welcome-banner-container"
             class="bg-gradient-to-r from-accent-300 to-yellow-100 rounded-2xl p-6 sm:p-8 text-surface-900 shadow-sm border border-accent-200 relative overflow-hidden"
           >
             <!-- Decorative background elements -->

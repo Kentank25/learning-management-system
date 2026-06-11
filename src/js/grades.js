@@ -67,7 +67,7 @@ import { sidebarTexts, coursesData } from './db.js';
     let html = `
       <!-- Header stats -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gradient-to-br from-sky-400 to-blue-500 text-white rounded-2xl p-5 shadow-sm border border-sky-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-sky-400 to-blue-500 text-white rounded-2xl p-5 shadow-lg border border-sky-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-sky-100">Bintang Terkumpul</span>
             <span class="text-3xl font-black block mt-1">${totalStars} Bintang ⭐</span>
@@ -77,7 +77,7 @@ import { sidebarTexts, coursesData } from './db.js';
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-yellow-400 to-amber-500 text-white rounded-2xl p-5 shadow-sm border border-yellow-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-yellow-400 to-amber-500 text-white rounded-2xl p-5 shadow-lg border border-yellow-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-yellow-100">Lencana Kehormatan</span>
             <span class="text-3xl font-black block mt-1">${unlockedCount} / ${badges.length} Didapat 🏆</span>
@@ -87,7 +87,7 @@ import { sidebarTexts, coursesData } from './db.js';
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-2xl p-5 shadow-sm border border-emerald-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-emerald-400 to-teal-500 text-white rounded-2xl p-5 shadow-lg border border-emerald-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-emerald-100">Evaluasi Belajar</span>
             <span class="text-lg font-bold block mt-2">Belajar Sangat Ceria & Aktif!</span>
@@ -259,7 +259,7 @@ import { sidebarTexts, coursesData } from './db.js';
     let html = `
       <!-- Header stats -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gradient-to-br from-amber-400 to-amber-600 text-white rounded-2xl p-5 shadow-sm border border-amber-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-amber-400 to-amber-600 text-white rounded-2xl p-5 shadow-lg border border-amber-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-amber-100">Rata-rata Rapor</span>
             <span class="text-3xl font-black block mt-1">${average} / 100</span>
@@ -269,7 +269,7 @@ import { sidebarTexts, coursesData } from './db.js';
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl p-5 shadow-sm border border-indigo-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white rounded-2xl p-5 shadow-lg border border-indigo-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-indigo-100">Status Kelulusan</span>
             <span class="text-xl font-black block mt-2">${competencyStatus}</span>
@@ -279,7 +279,7 @@ import { sidebarTexts, coursesData } from './db.js';
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-sm border border-emerald-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-lg border border-emerald-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-emerald-100">Predikat Akademik</span>
             <span class="text-2xl font-black block mt-1">${average >= 85 ? 'Sangat Baik (A)' : 'Baik (B)'}</span>
@@ -384,7 +384,7 @@ import { sidebarTexts, coursesData } from './db.js';
     let html = `
       <!-- Header stats -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl p-5 shadow-sm border border-indigo-500 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-2xl p-5 shadow-lg border border-indigo-500 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-indigo-100">IPK Semester (IPS)</span>
             <span class="text-3xl font-black block mt-1">${gpa.toFixed(2)} <span class="text-sm font-medium text-indigo-300">/ 4.00</span></span>
@@ -394,7 +394,7 @@ import { sidebarTexts, coursesData } from './db.js';
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-violet-600 to-violet-800 text-white rounded-2xl p-5 shadow-sm border border-violet-500 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-violet-600 to-violet-800 text-white rounded-2xl p-5 shadow-lg border border-violet-500 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-violet-100">Beban SKS Semester</span>
             <span class="text-3xl font-black block mt-1">${totalSKS} SKS</span>
@@ -404,7 +404,7 @@ import { sidebarTexts, coursesData } from './db.js';
           </div>
         </div>
 
-        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-sm border border-emerald-300 flex items-center justify-between">
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl p-5 shadow-lg border border-emerald-300 flex items-center justify-between hover-lift">
           <div>
             <span class="text-xs uppercase font-extrabold tracking-wider text-emerald-100">Predikat Kelulusan</span>
             <span class="text-2xl font-black block mt-1">${gpa >= 3.51 ? 'Dengan Pujian (Cumlaude)' : 'Sangat Memuaskan'}</span>

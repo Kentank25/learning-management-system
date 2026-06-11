@@ -57,19 +57,21 @@ import { sidebarTexts, coursesData } from './db.js';
     }
 
     courses.forEach(course => {
-      const isCompleted = course.progress === 100;
+      const savedProg = localStorage.getItem(`progress-course-${course.id}`);
+      const courseProgress = savedProg !== null ? parseInt(savedProg) : course.progress;
+      const isCompleted = courseProgress === 100;
       const accentTextColor = eduLevel === 'sd' ? 'text-sky-600' : (eduLevel === 'kuliah' ? 'text-indigo-600' : 'text-accent-600');
       
       const accentBtnClass = isCompleted 
         ? 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
         : (eduLevel === 'sd' ? 'bg-sky-400 hover:bg-sky-500 text-white border-transparent' : (eduLevel === 'kuliah' ? 'bg-indigo-600 hover:bg-indigo-700 text-white border-transparent' : 'bg-accent-400 hover:bg-accent-500 text-surface-900 border-transparent'));
       
-      const btnText = isCompleted ? 'Tinjau Materi (Selesai)' : (course.progress > 0 ? 'Lanjutkan Belajar' : 'Mulai Belajar');
+      const btnText = isCompleted ? 'Tinjau Materi (Selesai)' : (courseProgress > 0 ? 'Lanjutkan Belajar' : 'Mulai Belajar');
 
       const cardHTML = `
         <div
           data-status="${course.status}"
-          class="course-card bg-white border border-surface-200 rounded-2xl shadow-sm hover:shadow-md transition-all group overflow-hidden flex flex-col"
+          class="course-card bg-white border border-surface-200 rounded-2xl shadow-sm hover:shadow-md hover-lift transition-all group overflow-hidden flex flex-col"
         >
           <!-- Card Banner -->
           <div class="h-32 bg-gradient-to-br ${course.colorClass} relative p-4 flex items-end">
@@ -93,10 +95,10 @@ import { sidebarTexts, coursesData } from './db.js';
             <div class="mt-auto">
               <div class="flex justify-between text-xs font-medium mb-1.5">
                 <span class="text-surface-600">Progres Belajar</span>
-                <span class="${eduLevel === 'sd' ? 'text-sky-500' : (eduLevel === 'kuliah' ? 'text-indigo-600' : 'text-accent-600')} font-bold">${course.progress}%</span>
+                <span class="${eduLevel === 'sd' ? 'text-sky-500' : (eduLevel === 'kuliah' ? 'text-indigo-600' : 'text-accent-600')} font-bold">${courseProgress}%</span>
               </div>
               <div class="w-full bg-surface-100 rounded-full h-1.5 mb-4">
-                <div class="${eduLevel === 'sd' ? 'bg-sky-500' : (eduLevel === 'kuliah' ? 'bg-indigo-600' : 'bg-accent-500')} h-1.5 rounded-full" style="width: ${course.progress}%"></div>
+                <div class="${eduLevel === 'sd' ? 'bg-sky-500' : (eduLevel === 'kuliah' ? 'bg-indigo-600' : 'bg-accent-500')} h-1.5 rounded-full" style="width: ${courseProgress}%"></div>
               </div>
 
               <a

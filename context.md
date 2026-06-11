@@ -7,10 +7,12 @@ SekolahMu (LMS DevLearn) adalah prototipe aplikasi Learning Management System (L
 ## 🛠️ Tech Stack & Konsep Inti
 1. **Core:** HTML5 murni (Vanilla HTML) dan Vanilla JavaScript (ES6+).
 2. **Styling:** CSS3 dengan **Tailwind CSS v4** (diimpor melalui `@import "tailwindcss"` di `src/css/index.css`).
-3. **Icons:** Lucide Icons SVG (di-render dinamis via script tag `unpkg.com/lucide@latest` dan diinisiasi lewat `lucide.createIcons()`).
-4. **Build Tool:** Vite untuk server lokal (`npm run dev`) dan manajemen aset.
-5. **Theme Dynamic & Adaptive Layout:**
+3. **Typography:** Menggunakan Google Fonts *Plus Jakarta Sans* untuk teks umum (`var(--font-sans)`) dan *Outfit* untuk judul/header (`var(--font-display)`), diimpor langsung pada file CSS utama.
+4. **Icons:** Lucide Icons SVG (di-render dinamis via script tag `unpkg.com/lucide@latest` dan diinisiasi lewat `lucide.createIcons()`).
+5. **Build Tool:** Vite untuk server lokal (`npm run dev`) dan manajemen aset.
+6. **Theme Dynamic & Adaptive Layout:**
    - Variabel warna, tata letak kolom, dan visibilitas menu diatur berdasarkan class di elemen `<body>` (misal: `body.theme-sd`, `body.theme-kuliah`, dan default untuk SMK).
+   - Penanganan tema dilengkapi proteksi anti-bocor tema (*anti-theme leakage*). Seluruh script pemuatan tema membersihkan tema lain (`classList.remove('theme-sd', 'theme-kuliah')`) sebelum menambahkan kelas tema aktif.
    - Aturan show/hide elemen adaptif menggunakan utilitas CSS murni di `src/css/index.css`:
      - `.show-sd` (hanya tampil di SD) & `.hide-sd` (sembunyikan di SD).
      - `.show-kuliah` (hanya tampil di Kuliah) & `.hide-kuliah` (sembunyikan di Kuliah).
@@ -18,27 +20,42 @@ SekolahMu (LMS DevLearn) adalah prototipe aplikasi Learning Management System (L
 
 ---
 
+## 🎨 Premium Visual Elements (Visual Overhaul)
+Aplikasi ini menerapkan standar UI modern dengan kualitas visual tinggi:
+*   **Dynamic Background Blobs:** Lingkaran warna gradasi melayang di latar belakang (`bg-accent-300` & `bg-primary-300`) yang secara halus beradaptasi warnanya mengikuti tema tingkat pendidikan aktif.
+*   **Glassmorphism Layout:** Sidebar navigasi samping dan topbar menggunakan efek `.glass-panel` transparan dengan filter blur tebal (`backdrop-blur-xl bg-white/70 border-white/40 shadow-xl relative`).
+*   **Animasi Dropdown:** Dropdown Notifikasi dan Profil menggunakan `@keyframes fadeInScale` sehingga meluncur dan membesar secara organik (`scale` dan `opacity`) dengan kurva transisi *cubic-bezier* premium saat dibuka.
+*   **High Stacking Context:** Parent `header` diposisikan dengan `z-30` di seluruh berkas HTML untuk memastikan seluruh menu dropdown melayang di atas konten utama tanpa ada overlap dari efek transform pada welcome banner.
+*   **Universal Interactive Transition:** Semua elemen interaktif (`a`, `button`, `select`, `input`, `.level-card`, `.course-card`) menggunakan transisi lambat `transition-all 0.25s` untuk memberikan umpan balik visual yang premium.
+
+---
+
 ## 📂 Struktur Direktori Proyek
 ```text
 learning-management-system/
 ├── index.html            # Dashboard / Beranda Siswa
-├── login.html            # Halaman Portal Masuk & Pemilih Jenjang
+├── login.html            # Halaman Portal Masuk & Pemilih Jenjang (Ultra-Glassmorphic)
 ├── courses.html          # Katalog Mata Pelajaran / Kuliah
 ├── course-detail.html    # Halaman Detail Kursus & Pembelajaran
 ├── calendar.html         # Agenda & Kalender Kegiatan Interaktif
+├── grades.html           # Rapor Nilai & Bento Grid Hasil Belajar
+├── files.html            # Penyimpanan File & Radial Progress Capacity
 ├── package.json          # Konfigurasi npm (scripts, dependencies)
 ├── vite.config.js        # Konfigurasi Vite & Tailwind CSS
+├── context.md            # Konteks Proyek & Panduan Promp (File ini)
 └── src/
     ├── css/
-    │   └── index.css     # Base Tailwind & Kustomisasi Variabel Tema & Adaptive CSS
+    │   └── index.css     # Base Tailwind, Font Google, Variabel Tema & Adaptive CSS
     └── js/
         ├── db.js         # Central Database (Mock Data untuk semua jenjang)
         ├── main.js       # Logika Global (Inisiasi Lucide, Session Check, Sidebar Mobile, Logout)
         ├── login.js      # Logika login & interaktivitas level selector
-        ├── dashboard.js  # Handler data dinamis & widget Dashboard
+        ├── dashboard.js  # Handler data dinamis & welcome banner premium
         ├── courses.js    # Handler grid kursus, filter tab, dan fitur pencarian
         ├── course-detail.js # Handler modul, sistem kuis (SD), upload tugas (SMK/Kuliah), forum diskusi (Kuliah)
         ├── calendar.js   # Pembuat kalender grid interaktif bulanan & formulir tambah kegiatan
+        ├── grades.js     # Bento grid pencapaian akademik & rapor bintang
+        ├── files.js      # Handler file cloud pribadi & radial progress ring storage
         └── buddy.js      # SekolahMu Buddy (Virtual Pet pendamping belajar adaptif)
 ```
 
@@ -75,32 +92,29 @@ Aplikasi ini berjalan tanpa database server, melainkan memanfaatkan data statis 
 
 ### 1. Central Static Database (`src/js/db.js`)
 Menyediakan modul modular ekspor:
-- `sidebarTexts`: Kustomisasi teks menu samping (misal: "Mata Pelajaran" untuk SMK vs "Mata Kuliah" untuk Kuliah vs "Kelas Saya" untuk SD).
-- `scheduleData`: Agenda pelajaran harian.
-- `deadlinesData`: Jadwal tugas mendatang.
-- `coursesData`: Data struktural kelas, berisi judul, guru/dosen, deskripsi, daftar sub-modul materi, soal kuis bergambar (SD), target tugas (SMK/Kuliah).
-- `calendarData`: Event kalender bawaan per jenjang.
+- `sidebarTexts`: Teks kustomisasi menu samping (misal: "Mata Pelajaran" untuk SMK vs "Mata Kuliah" untuk Kuliah vs "Kelas Saya" untuk SD).
+- `coursesData`: Data struktural kelas, berisi judul, pengampu, deskripsi, daftar sub-modul materi, soal kuis bergambar (SD), target tugas (SMK/Kuliah).
 
 ### 2. SekolahMu Buddy (`src/js/buddy.js`)
 Sebuah floating widget Virtual Pet yang disuntikkan ke seluruh halaman:
-- **Animasi:** Menggunakan CSS animation `@keyframes buddy-float` yang memberikan efek melayang dinamis pada avatar.
-- **Greeting/Speech Bubble:** Mengeluarkan balon dialog berisi sapaan ramah pada jeda waktu tertentu (idle/awal load) yang disesuaikan dengan bahasa anak (SD), bahasa programmer (SMK), atau akademis formal (Kuliah).
-- **Console Obrolan:** Ketika avatar diklik, panel chat akan meluncur ke atas. Pengguna bisa mengetik pesan (terutama kata kunci seperti `tips`, `tugas`, `bintang`/`level`, atau `lelucon`) dan Buddy akan merespons secara real-time disertai visual "Typing Indicator" (animasi 3 titik memantul).
+- **Animasi:** Efek melayang dinamis pada avatar lewat `@keyframes buddy-float`.
+- **Greeting/Speech Bubble:** Mengeluarkan balon dialog berisi sapaan ramah berkala.
+- **Console Obrolan:** Panel chat dengan gelembung pesan asimetris (`rounded-tl-none` untuk bot, `rounded-tr-none` untuk user) serta efek gradasi warna. Membalas kata kunci seperti `tips`, `tugas`, `bintang`/`level`, atau `lelucon` secara real-time.
 
 ### 3. Modul Kuis Ceria (`src/js/course-detail.js` - SD Only)
-- Menampilkan soal-soal pilihan ganda yang ceria.
-- Menghitung jawaban benar-salah. Jika benar 100%, akan memicu trigger kembang api **Canvas Confetti** (`canvas-confetti` library), memberikan 10 Bintang Prestasi, dan memperbarui visual pet Piko agar berevolusi ke bentuk yang lebih dewasa.
+- Menghitung jawaban benar-salah. Jika benar 100%, memicu trigger kembang api **Canvas Confetti** (`canvas-confetti` library), memberikan 10 Bintang Prestasi, dan memperbarui evolusi pet Piko.
 
 ### 4. Modul Submisi Tugas (`src/js/course-detail.js` - SMK & Kuliah)
-- Drag-and-drop zone mockup untuk upload file.
-- Simulasi progress bar upload dengan presentase loading dinamis dari 0% ke 100% menggunakan `setInterval` sebelum menyimpan status pengumpulan.
+- Drag-and-drop zone mockup untuk upload file dengan progress bar upload dinamis dari 0% ke 100%.
 
 ### 5. Modul Forum Diskusi Perkuliahan (`src/js/course-detail.js` - Kuliah Only)
-- Chat room perkuliahan yang menampilkan komentar/instruksi dosen (ber-badge merah) dan mahasiswa (ber-badge indigo).
-- Mahasiswa dapat mengirim tanggapan baru yang langsung ditambahkan ke antrean layout serta disimpan ke `localStorage`.
+- Chat room perkuliahan yang menampilkan komentar/instruksi dosen (ber-badge merah) dan mahasiswa (ber-badge indigo), tersinkronisasi ke `localStorage`.
 
 ### 6. Kalender Kegiatan (`src/js/calendar.js`)
-- Menggambar grid tanggal bulanan dinamis.
-- Hari-hari yang memiliki kegiatan ditandai dengan dot kecil berwarna (hijau untuk kelas, orange untuk deadline, dan indigo untuk event).
-- Dilengkapi navigasi perpindahan bulan (Maju/Mundur).
-- Mengintegrasikan modal pop-up "Tambah Kegiatan Baru" yang sinkron dengan penanda dot kalender secara instan.
+- Menggambar grid tanggal bulanan dinamis dengan dot penanda kegiatan (hijau untuk kelas, orange untuk deadline, dan indigo untuk event) serta modal input kegiatan baru.
+
+### 7. Hasil Studi & Rapor (`src/js/grades.js`)
+- Memvisualisasikan hasil belajar di ketiga jenjang menggunakan tata letak bento grid modern untuk statistik ringkasan akademik (IPK, SKS, Bintang Emas, status kompetensi) dan tabel evaluasi.
+
+### 8. Drive File Pribadi & Radial Progress (`src/js/files.js`)
+- Handler berkas pribadi yang diintegrasikan dengan folder navigasi (Kuliah & SMK) serta visual kapasitas sisa memori menggunakan widget **Radial Progress Ring SVG** melingkar yang berpendar dinamis.

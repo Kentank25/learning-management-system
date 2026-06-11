@@ -176,7 +176,7 @@ const fetchBuddyResponse = async (userMessage, level) => {
   // 2. Build and Inject DOM Widget Structure
   const container = document.createElement('div');
   container.id = 'sekolahmu-buddy-container';
-  container.className = 'fixed bottom-6 right-6 z-50 font-sans flex flex-col items-end pointer-events-none';
+  container.className = 'fixed bottom-6 right-6 z-40 font-sans flex flex-col items-end pointer-events-none';
   
   // Calculate dynamic progression stats
   const prog = config.getProgression();
@@ -330,22 +330,23 @@ const fetchBuddyResponse = async (userMessage, level) => {
 
     const isBot = role === 'bot';
     const alignClass = isBot ? 'justify-start' : 'justify-end';
+    const bubbleCorners = isBot ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl rounded-tr-none';
     
-    let msgBg = 'bg-surface-100 text-surface-800 border-surface-200';
+    let msgBg = 'bg-surface-100 text-surface-800 border-surface-200/60';
     if (!isBot) {
       msgBg = eduLevel === 'sd' 
-        ? 'bg-sky-500 text-white border-sky-400' 
-        : (eduLevel === 'kuliah' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-amber-500 text-white border-amber-400');
+        ? 'bg-gradient-to-tr from-sky-400 to-blue-500 text-white border-transparent shadow-sky-100' 
+        : (eduLevel === 'kuliah' ? 'bg-gradient-to-tr from-indigo-500 to-violet-600 text-white border-transparent shadow-indigo-100' : 'bg-gradient-to-tr from-amber-500 to-amber-600 text-white border-transparent shadow-amber-100');
     } else {
-      if (eduLevel === 'sd') msgBg = 'bg-sky-50 text-sky-900 border-sky-100';
-      if (eduLevel === 'kuliah') msgBg = 'bg-indigo-50/70 text-indigo-950 border-indigo-100';
-      if (eduLevel === 'smk') msgBg = 'bg-amber-50/70 text-amber-950 border-amber-100';
+      if (eduLevel === 'sd') msgBg = 'bg-sky-50/90 text-sky-950 border-sky-100/60';
+      if (eduLevel === 'kuliah') msgBg = 'bg-indigo-50/90 text-indigo-950 border-indigo-100/60';
+      if (eduLevel === 'smk') msgBg = 'bg-amber-50/90 text-amber-950 border-amber-100/60';
     }
 
     const messageHTML = `
       <div class="flex ${alignClass} animate-fade-in duration-200">
-        <div class="max-w-[85%] p-2.5 rounded-2xl border text-xs leading-relaxed shadow-sm ${msgBg}">
-          <div class="font-extrabold text-[9px] uppercase tracking-wider opacity-60 mb-0.5">${senderName}</div>
+        <div class="max-w-[85%] p-3 ${bubbleCorners} border text-xs leading-relaxed shadow-sm ${msgBg}">
+          <div class="font-extrabold text-[8px] uppercase tracking-widest opacity-60 mb-0.5">${senderName}</div>
           <div>${text}</div>
         </div>
       </div>

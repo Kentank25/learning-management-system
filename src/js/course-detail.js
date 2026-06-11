@@ -70,7 +70,7 @@ import { sidebarTexts, coursesData } from './db.js';
 
   // Apply colors and layout configs
   if (eduLevel === 'sd') {
-    if (courseBanner) courseBanner.className = 'bg-gradient-to-r from-sky-400 to-blue-500 rounded-3xl p-6 sm:p-8 text-white shadow-md border border-sky-300 relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px]';
+    if (courseBanner) courseBanner.className = 'bg-gradient-sd rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-sky-300 relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px] hover-lift';
     if (courseBadge) courseBadge.textContent = 'Sekolah Dasar (SD)';
     if (infoWeight) infoWeight.className = 'hidden';
     if (sdStarWidget) {
@@ -95,7 +95,7 @@ import { sidebarTexts, coursesData } from './db.js';
       capIcon.classList.add('text-sky-500');
     }
   } else if (eduLevel === 'kuliah') {
-    if (courseBanner) courseBanner.className = 'bg-gradient-to-r from-indigo-600 to-violet-800 rounded-3xl p-6 sm:p-8 text-white shadow-md border border-indigo-400 relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px]';
+    if (courseBanner) courseBanner.className = 'bg-gradient-kuliah rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-indigo-500 relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px] hover-lift';
     if (courseBadge) courseBadge.textContent = course.tag; // SKS indicator
     if (infoWeight) {
       infoWeight.innerHTML = `<span class="text-surface-500 flex items-center gap-2"><i data-lucide="award" class="w-4.5 h-4.5 text-indigo-500"></i>Beban Kuliah</span> <span class="font-bold text-surface-900">${course.tag}</span>`;
@@ -120,7 +120,7 @@ import { sidebarTexts, coursesData } from './db.js';
     }
   } else {
     // SMK
-    if (courseBanner) courseBanner.className = 'bg-gradient-to-r from-amber-500 to-amber-600 rounded-3xl p-6 sm:p-8 text-white shadow-md border border-amber-400 relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px]';
+    if (courseBanner) courseBanner.className = 'bg-gradient-smk rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-amber-400 relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px] hover-lift';
     if (courseBadge) courseBadge.textContent = 'SMK RPL - ' + course.tag;
     if (infoWeight) {
       infoWeight.innerHTML = `<span class="text-surface-500 flex items-center gap-2"><i data-lucide="award" class="w-4.5 h-4.5 text-amber-500"></i>Semester</span> <span class="font-bold text-surface-900">${course.tag}</span>`;
@@ -247,7 +247,7 @@ import { sidebarTexts, coursesData } from './db.js';
         const checkClass = m.completed ? checkedColor : 'text-surface-300 hover:text-surface-500';
         
         html += `
-          <div class="flex items-center justify-between p-3.5 border border-surface-100 rounded-xl hover:bg-surface-50/50 hover:border-surface-200 transition-all group">
+          <div class="flex items-center justify-between p-3.5 border border-surface-100 rounded-xl hover:bg-surface-50/50 hover:border-surface-200 hover-lift transition-all group">
             <div class="flex items-center gap-3">
               <span class="w-7 h-7 bg-surface-100 text-surface-600 flex items-center justify-center font-bold text-xs rounded-lg">${idx + 1}</span>
               <div>

@@ -5,22 +5,30 @@
   const username = localStorage.getItem('username') || 'Keane';
   const currentPath = window.location.pathname;
 
-  // If session doesn't exist, redirect to login page (unless already on login.html)
-  if (!eduLevel && !currentPath.includes('login.html')) {
+  // If session doesn't exist, redirect to login page (unless already on login page)
+  if (!eduLevel && !currentPath.includes('login')) {
     window.location.href = 'login.html';
     return;
   }
 
-  // Apply theme class to body
+  // Apply theme class to body safely by clearing previous theme classes first
+  document.body.classList.remove('theme-sd', 'theme-kuliah');
   if (eduLevel === 'sd') {
     document.body.classList.add('theme-sd');
   } else if (eduLevel === 'kuliah') {
     document.body.classList.add('theme-kuliah');
   } // SMK is default (no class needed or we use current default styles)
 
-  // Initialize Lucide Icons after the theme is set
-  if (typeof lucide !== 'undefined') {
-    lucide.createIcons();
+  // Initialize Lucide Icons after the theme is set, ensuring DOM is fully parsed
+  const initLucide = () => {
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLucide);
+  } else {
+    initLucide();
   }
 
   // 2. Mobile Menu Toggle
@@ -28,28 +36,37 @@
   const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
 
-  if (mobileMenuBtn && sidebar) {
-    const toggleMenu = () => {
-      const isClosed = sidebar.classList.contains('-translate-x-full');
-      
-      if (isClosed) {
-        sidebar.classList.remove('-translate-x-full');
-        if (sidebarOverlay) {
-          sidebarOverlay.classList.remove('hidden');
-          setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
-        }
-      } else {
-        sidebar.classList.add('-translate-x-full');
-        if (sidebarOverlay) {
-          sidebarOverlay.classList.add('opacity-0');
-          setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
-        }
+  if (sidebar) {
+    const openSidebar = () => {
+      sidebar.classList.remove('-translate-x-full');
+      if (sidebarOverlay) {
+        sidebarOverlay.classList.remove('hidden');
+        setTimeout(() => sidebarOverlay.classList.remove('opacity-0'), 10);
       }
     };
 
-    mobileMenuBtn.addEventListener('click', toggleMenu);
+    const closeSidebar = () => {
+      sidebar.classList.add('-translate-x-full');
+      if (sidebarOverlay) {
+        sidebarOverlay.classList.add('opacity-0');
+        setTimeout(() => sidebarOverlay.classList.add('hidden'), 300);
+      }
+    };
+
+    const toggleMenu = () => {
+      const isClosed = sidebar.classList.contains('-translate-x-full');
+      if (isClosed) {
+        openSidebar();
+      } else {
+        closeSidebar();
+      }
+    };
+
+    if (mobileMenuBtn) {
+      mobileMenuBtn.addEventListener('click', toggleMenu);
+    }
     if (sidebarOverlay) {
-      sidebarOverlay.addEventListener('click', toggleMenu);
+      sidebarOverlay.addEventListener('click', closeSidebar);
     }
   }
 

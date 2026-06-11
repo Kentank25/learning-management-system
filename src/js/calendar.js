@@ -137,9 +137,8 @@ import { sidebarTexts, calendarData } from './db.js';
     // First day of month (e.g. May 1, 2026 is Friday)
     const firstDay = new Date(currentYear, currentMonth, 1);
     // JS getDay(): Sun=0, Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6
-    // We want Mon=0, Tue=1, Wed=2, Thu=3, Fri=4, Sat=5, Sun=6
-    let startDayIndex = firstDay.getDay() - 1;
-    if (startDayIndex < 0) startDayIndex = 6; // Sunday
+    // We start week on Sunday = 0
+    const startDayIndex = firstDay.getDay();
     
     // Days in current month
     const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
