@@ -99,4 +99,32 @@ body.theme-kuliah .hide-kuliah {
   display: none !important;
 }
 
+/* Custom Dropdown Animation & Hover transitions */
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeInScale 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Glassmorphism premium enhancement */
+.backdrop-blur-md {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Smooth interactive transitions for all key controls */
+a, button, select, input, .level-card, .course-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
 

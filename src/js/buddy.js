@@ -147,7 +147,7 @@ const fetchBuddyResponse = async (userMessage, level) => {
   return config.responses.default;
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+(function() {
   const eduLevel = localStorage.getItem('edu-level') || 'smk';
   const username = localStorage.getItem('username') || 'Keane';
   const config = PERSONA_CONFIGS[eduLevel];
@@ -405,4 +405,4 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
-});
+})();

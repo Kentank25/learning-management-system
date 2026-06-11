@@ -1,6 +1,6 @@
 import { sidebarTexts, scheduleData, deadlinesData, progressData } from './db.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+(function() {
   const eduLevel = localStorage.getItem('edu-level') || 'smk';
   const username = localStorage.getItem('username') || 'Keane';
 
@@ -218,4 +218,4 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }
-});
+})();

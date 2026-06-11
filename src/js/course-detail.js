@@ -1,6 +1,6 @@
 import { sidebarTexts, coursesData } from './db.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+(function() {
   const eduLevel = localStorage.getItem('edu-level') || 'smk';
   const username = localStorage.getItem('username') || 'Keane';
 
@@ -644,4 +644,4 @@ document.addEventListener('DOMContentLoaded', () => {
   renderHeaderProgress();
   renderTabsNav();
   renderTabContent();
-});
+})();
