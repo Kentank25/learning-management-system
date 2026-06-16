@@ -1,17 +1,32 @@
-import { sidebarTexts, coursesData } from './db.js';
+import { sidebarTexts, coursesData, historyCoursesData } from './db.js';
 import { getState, setState } from './store.js';
 
 (function() {
   const eduLevel = getState('edu-level', 'smk');
   const username = getState('username', 'Keane');
 
-  // 1. Parse URL ID
+  // 1. Parse URL ID & detect archive mode
   const urlParams = new URLSearchParams(window.location.search);
   const courseId = parseInt(urlParams.get('id')) || 1;
+  const isArchiveMode = urlParams.get('archive') === '1';
 
-  // 2. Fetch Active Course Data
-  const activeLevelCourses = coursesData[eduLevel] || [];
-  const course = activeLevelCourses.find(c => c.id === courseId) || activeLevelCourses[0];
+  // 2. Fetch Course Data (active or archive)
+  let course;
+  let archivePeriodInfo = null;
+  if (isArchiveMode) {
+    const periodsForLevel = historyCoursesData[eduLevel] || [];
+    for (const period of periodsForLevel) {
+      const found = period.courses.find(c => c.id === courseId);
+      if (found) {
+        course = found;
+        archivePeriodInfo = { period: period.period, year: period.year };
+        break;
+      }
+    }
+  } else {
+    const activeLevelCourses = coursesData[eduLevel] || [];
+    course = activeLevelCourses.find(c => c.id === courseId) || activeLevelCourses[0];
+  }
 
   if (!course) {
     alert("Kelas tidak ditemukan.");
@@ -30,6 +45,136 @@ import { getState, setState } from './store.js';
     if (eduLevel === 'kuliah') avatarColor = '6366f1'; // indigo
     profileImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=dbeafe&color=${avatarColor}`;
   }
+
+  // ───── ARCHIVE MODE ─────────────────────────────────
+  // If viewing an archived course, render simplified read-only layout
+  // and return early — none of the interactive code below runs.
+  if (isArchiveMode && archivePeriodInfo) {
+    const gradeColorMap = {
+      A: { badge: 'bg-emerald-100 text-emerald-700 border-emerald-300', bar: 'bg-emerald-500' },
+      B: { badge: 'bg-blue-100 text-blue-700 border-blue-300', bar: 'bg-blue-500' },
+      C: { badge: 'bg-amber-100 text-amber-700 border-amber-300', bar: 'bg-amber-500' },
+      D: { badge: 'bg-red-100 text-red-700 border-red-300', bar: 'bg-red-400' },
+    };
+    const grade = gradeColorMap[course.gradeLetter] || gradeColorMap.D;
+    const accentColorBanner = eduLevel === 'sd' ? 'bg-gradient-sd' : (eduLevel === 'kuliah' ? 'bg-gradient-kuliah' : 'bg-gradient-smk');
+    const accentBorderBanner = eduLevel === 'sd' ? 'border-sky-300' : (eduLevel === 'kuliah' ? 'border-indigo-500' : 'border-amber-400');
+    const breadcrumbParent = document.getElementById('breadcrumb-parent');
+    const breadcrumbCurrent = document.getElementById('breadcrumb-current');
+    if (breadcrumbParent) breadcrumbParent.textContent = `${archivePeriodInfo.period}`;
+    if (breadcrumbCurrent) breadcrumbCurrent.textContent = course.title;
+
+    // Adapt banner styling
+    const courseBanner = document.getElementById('course-banner');
+    if (courseBanner) {
+      courseBanner.className = `${accentColorBanner} rounded-3xl p-6 sm:p-8 text-white shadow-xl ${accentBorderBanner} border relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px] opacity-90`;
+      // Insert archive strip above banner content
+      const archiveStrip = document.createElement('div');
+      archiveStrip.className = 'absolute top-0 inset-x-0 bg-amber-500/80 backdrop-blur-sm text-white text-xs font-bold flex items-center justify-center gap-2 py-1.5';
+      archiveStrip.innerHTML = `<i data-lucide="archive" class="w-3.5 h-3.5"></i> Arsip Akademik &mdash; ${archivePeriodInfo.period} &bull; ${archivePeriodInfo.year}`;
+      courseBanner.insertAdjacentElement('afterbegin', archiveStrip);
+    }
+
+    const courseBadgeEl = document.getElementById('course-badge');
+    const courseTitleEl = document.getElementById('course-title');
+    const courseTeacherEl = document.getElementById('course-teacher');
+    const courseDescEl = document.getElementById('course-desc');
+    if (courseBadgeEl) courseBadgeEl.textContent = course.tag;
+    if (courseTitleEl) courseTitleEl.textContent = course.title;
+    if (courseTeacherEl) courseTeacherEl.innerHTML = `<i data-lucide="user" class="w-4 h-4"></i> Pengajar: ${course.teacher}`;
+    if (courseDescEl) courseDescEl.textContent = course.description;
+
+    // --- Archive layout: replace tabs + right column with archive content ---
+    const tabsNavEl = document.getElementById('tabs-navigation');
+    const tabContentEl = document.getElementById('tab-content');
+    const infoWidget = document.querySelector('.space-y-6 .glass-panel'); // right col first widget
+
+    // Replace tab nav with a section label
+    if (tabsNavEl) {
+      tabsNavEl.closest('.glass-panel').outerHTML = '';
+    }
+
+    // Replace tab content with archive module checklist
+    if (tabContentEl) {
+      const modulesHtml = course.modules.map(m => `
+        <div class="flex items-start gap-3 p-3 rounded-xl bg-emerald-50/60 border border-emerald-100">
+          <span class="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+            <i data-lucide="check" class="w-3 h-3 text-white"></i>
+          </span>
+          <span class="text-sm text-surface-800 font-medium">${m.title}</span>
+        </div>
+      `).join('');
+
+      tabContentEl.innerHTML = `
+        <div class="glass-panel rounded-2xl p-5 shadow-sm space-y-3">
+          <h3 class="font-bold text-surface-900 text-base font-display flex items-center gap-2">
+            <i data-lucide="list-checks" class="w-5 h-5 text-emerald-600"></i>
+            Daftar Modul (${course.modules.length} modul)
+          </h3>
+          <div class="space-y-2">
+            ${modulesHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    // Replace right column (info widget) with archive score widget
+    const rightCol = document.querySelector('.lg\\:col-span-2')?.nextElementSibling;
+    if (rightCol) {
+      rightCol.innerHTML = `
+        <div class="glass-panel rounded-2xl p-5 shadow-sm space-y-4">
+          <h3 class="font-bold text-surface-900 text-base border-b border-surface-100/50 pb-3 font-display">Ringkasan Nilai</h3>
+          <div class="flex flex-col items-center py-4">
+            <span class="text-5xl font-black text-surface-900">${course.finalScore}</span>
+            <span class="text-sm text-surface-500 mt-1">Nilai Akhir</span>
+            <span class="mt-3 text-xl font-extrabold px-4 py-1 rounded-full border-2 ${grade.badge}">
+              Predikat ${course.gradeLetter}
+            </span>
+          </div>
+          <div class="border-t border-surface-100 pt-4 space-y-3">
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-surface-500 flex items-center gap-2">
+                <i data-lucide="award" class="w-4 h-4 text-emerald-500"></i>Status
+              </span>
+              <span class="font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full text-xs">Lulus ✅</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-surface-500 flex items-center gap-2">
+                <i data-lucide="calendar" class="w-4 h-4 text-surface-400"></i>Periode
+              </span>
+              <span class="font-semibold text-surface-900 text-xs">${archivePeriodInfo.period}</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-surface-500 flex items-center gap-2">
+                <i data-lucide="book-marked" class="w-4 h-4 text-surface-400"></i>Tahun Ajaran
+              </span>
+              <span class="font-semibold text-surface-900 text-xs">${archivePeriodInfo.year}</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="text-surface-500 flex items-center gap-2">
+                <i data-lucide="book-open-check" class="w-4 h-4 text-surface-400"></i>Total Modul
+              </span>
+              <span class="font-semibold text-surface-900 text-xs">${course.modules.length} modul selesai</span>
+            </div>
+          </div>
+          <!-- Score bar -->
+          <div class="pt-2">
+            <div class="flex justify-between text-xs font-semibold text-surface-600 mb-1.5">
+              <span>Pencapaian Nilai</span>
+              <span class="font-bold">${course.finalScore}/100</span>
+            </div>
+            <div class="w-full bg-surface-100 rounded-full h-2">
+              <div class="${grade.bar} h-2 rounded-full" style="width:${course.finalScore}%"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    return; // ← EXIT: skip all interactive code below
+  }
+  // ───── END ARCHIVE MODE ──────────────────────────────
 
   // 4. Sidebar Navigation Text Mapping
   const currentSidebar = sidebarTexts[eduLevel];

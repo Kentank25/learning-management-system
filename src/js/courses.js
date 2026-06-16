@@ -1,4 +1,4 @@
-import { sidebarTexts, coursesData } from './db.js';
+import { sidebarTexts, coursesData, historyCoursesData } from './db.js';
 import { getState } from './store.js';
 
 (function() {
@@ -123,6 +123,155 @@ import { getState } from './store.js';
 
   // Initial render of all courses
   renderCards(currentCourses);
+
+  // ─── History Section ───────────────────────────────────────
+  const renderHistorySection = () => {
+    const historyContainer = document.getElementById('history-section');
+    if (!historyContainer) return;
+
+    const periodsForLevel = historyCoursesData[eduLevel] || [];
+    if (periodsForLevel.length === 0) {
+      historyContainer.classList.add('hidden');
+      return;
+    }
+
+    historyContainer.classList.remove('hidden');
+
+    // Grade letter color helper
+    const gradeColor = (letter) => {
+      if (letter === 'A') return 'text-emerald-600 bg-emerald-50 border-emerald-200';
+      if (letter === 'B') return 'text-blue-600 bg-blue-50 border-blue-200';
+      if (letter === 'C') return 'text-amber-600 bg-amber-50 border-amber-200';
+      return 'text-red-600 bg-red-50 border-red-200';
+    };
+
+    const accentColor = eduLevel === 'sd' ? 'text-sky-600' : (eduLevel === 'kuliah' ? 'text-indigo-600' : 'text-accent-600');
+    const accentBorder = eduLevel === 'sd' ? 'border-sky-200' : (eduLevel === 'kuliah' ? 'border-indigo-200' : 'border-accent-200');
+    const historyLabel = eduLevel === 'kuliah' ? 'Riwayat Semester Sebelumnya' : 'Riwayat Kelas Sebelumnya';
+
+    // Section header
+    let html = `
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-surface-100">
+            <i data-lucide="history" class="w-5 h-5 text-surface-500"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-surface-800 font-display">${historyLabel}</h2>
+            <p class="text-xs text-surface-500 mt-0.5">${periodsForLevel.length} periode tercatat dalam arsip akademik</p>
+          </div>
+        </div>
+        <div class="flex-1 h-px bg-surface-200"></div>
+      </div>
+    `;
+
+    // One accordion per period
+    periodsForLevel.forEach((periodData, periodIdx) => {
+      const accordionId = `history-accordion-${periodIdx}`;
+      const bodyId = `history-body-${periodIdx}`;
+      // First accordion starts open
+      const isOpen = periodIdx === 0;
+
+      // Count courses and compute avg score
+      const avgScore = Math.round(periodData.courses.reduce((sum, c) => sum + c.finalScore, 0) / periodData.courses.length);
+
+      html += `
+        <div id="${accordionId}" class="glass-panel border border-surface-200/60 rounded-2xl overflow-hidden shadow-sm">
+          <!-- Accordion Header -->
+          <button
+            onclick="(function(){
+              const body = document.getElementById('${bodyId}');
+              const btn = document.getElementById('${accordionId}-chevron');
+              const isHidden = body.classList.contains('hidden');
+              body.classList.toggle('hidden');
+              btn.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+            })()"
+            class="w-full flex items-center justify-between px-5 py-4 hover:bg-surface-50/80 transition-colors text-left cursor-pointer"
+          >
+            <div class="flex items-center gap-3">
+              <div class="p-2 rounded-xl bg-surface-100">
+                <i data-lucide="calendar-check-2" class="w-4 h-4 text-surface-500"></i>
+              </div>
+              <div>
+                <span class="font-bold text-surface-900 font-display">${periodData.period}</span>
+                <span class="ml-2 text-xs text-surface-500">${periodData.year}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="text-xs text-surface-500 font-medium hidden sm:inline">${periodData.courses.length} mata pelajaran</span>
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-surface-100 text-surface-600">Rata-rata: ${avgScore}</span>
+              <i
+                id="${accordionId}-chevron"
+                data-lucide="chevron-down"
+                class="w-4 h-4 text-surface-400 transition-transform duration-300"
+                style="transform: rotate(${isOpen ? '180deg' : '0deg'})"
+              ></i>
+            </div>
+          </button>
+
+          <!-- Accordion Body -->
+          <div id="${bodyId}" class="${isOpen ? '' : 'hidden'} border-t border-surface-100">
+            <div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+`;
+
+      // Cards for each course in this period
+      periodData.courses.forEach(course => {
+        const gradeClass = gradeColor(course.gradeLetter);
+        html += `
+          <div class="bg-white/70 border border-surface-200/80 rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-all group hover-lift">
+            <!-- Muted Archive Banner -->
+            <div class="h-24 bg-gradient-to-br ${course.colorClass} relative opacity-75 flex items-end p-3">
+              <div class="bg-white/90 backdrop-blur-sm p-1.5 rounded-lg shadow-sm relative z-10 translate-y-4">
+                <i data-lucide="${course.icon}" class="w-6 h-6 text-surface-600"></i>
+              </div>
+              <div class="absolute top-2 right-2 flex items-center gap-1 bg-emerald-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <i data-lucide="check-circle" class="w-2.5 h-2.5"></i>
+                Lulus
+              </div>
+              <span class="absolute bottom-2 left-2 bg-black/20 backdrop-blur-sm text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">${course.tag}</span>
+            </div>
+
+            <!-- Card Content -->
+            <div class="p-3.5 pt-6 flex-1 flex flex-col">
+              <h4 class="font-bold text-surface-900 text-sm leading-snug mb-1 line-clamp-2 group-hover:${accentColor} transition-colors">${course.title}</h4>
+              <p class="text-xs text-surface-500 flex items-center gap-1 mb-3">
+                <i data-lucide="user" class="w-3 h-3"></i> ${course.teacher}
+              </p>
+
+              <!-- Score row -->
+              <div class="mt-auto flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs text-surface-500">Nilai:</span>
+                  <span class="text-sm font-extrabold text-surface-800">${course.finalScore}</span>
+                </div>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full border ${gradeClass}">${course.gradeLetter}</span>
+              </div>
+
+              <!-- Link button -->
+              <a
+                href="course-detail.html?id=${course.id}&archive=1"
+                class="mt-3 block w-full py-1.5 text-center text-xs font-semibold rounded-lg border ${accentBorder} ${accentColor} hover:bg-surface-50 transition-colors"
+              >
+                Lihat Ringkasan
+              </a>
+            </div>
+          </div>
+`;
+      });
+
+      html += `
+            </div>
+          </div>
+        </div>
+`;
+    });
+
+    historyContainer.innerHTML = html;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  };
+
+  renderHistorySection();
+  // ───────────────────────────────────────────────────────────
 
   // 5. Course Filtering Logic (Status Tab)
   const filterBtns = document.querySelectorAll('.filter-btn');

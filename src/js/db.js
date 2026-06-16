@@ -488,3 +488,498 @@ export const calendarData = {
     { date: '2026-05-29', title: 'Sidang Proposal Kelompok RPL', type: 'event' }
   ]
 };
+
+// ─────────────────────────────────────────────────────────
+// HISTORICAL COURSE DATA
+// Organized by education level → period → courses.
+// IDs: SD 300+, SMK 400+, Kuliah 500+ (no clash with active).
+// Fields differ from coursesData: finalScore, gradeLetter.
+// No progress/status/kuis/tasks — archive is view-only.
+// ─────────────────────────────────────────────────────────
+export const historyCoursesData = {
+  sd: [
+    {
+      period: 'Kelas 3',
+      year: '2024/2025',
+      courses: [
+        {
+          id: 301,
+          title: 'Matematika Dasar',
+          teacher: 'Bu Endang Sri',
+          finalScore: 88,
+          gradeLetter: 'A',
+          colorClass: 'from-sky-400 to-blue-500',
+          icon: 'calculator',
+          tag: 'Kelas 3',
+          description: 'Pengenalan operasi dasar matematika: penjumlahan, pengurangan, perkalian sederhana, dan pengenalan bilangan ratusan. Belajar melalui aktivitas bergambar dan permainan angka yang menyenangkan.',
+          modules: [
+            { title: 'Mengenal Bilangan 1 sampai 500', completed: true },
+            { title: 'Penjumlahan Ratusan', completed: true },
+            { title: 'Pengurangan Dua Digit', completed: true },
+            { title: 'Pengenalan Perkalian dengan Gambar', completed: true },
+          ]
+        },
+        {
+          id: 302,
+          title: 'Bahasa Indonesia Ceria',
+          teacher: 'Bu Rika Permata',
+          finalScore: 91,
+          gradeLetter: 'A',
+          colorClass: 'from-rose-400 to-pink-500',
+          icon: 'book-open',
+          tag: 'Kelas 3',
+          description: 'Membaca, menulis, dan memahami teks sederhana. Berlatih menulis kalimat lengkap, mengenal huruf kapital, tanda titik, dan koma melalui cerita pendek bergambar.',
+          modules: [
+            { title: 'Membaca Cerita Pendek', completed: true },
+            { title: 'Menulis Kalimat Pertamaku', completed: true },
+            { title: 'Tanda Baca: Titik dan Koma', completed: true },
+          ]
+        },
+        {
+          id: 303,
+          title: 'Sains Alam Seru',
+          teacher: 'Pak Doni Aditya',
+          finalScore: 85,
+          gradeLetter: 'B',
+          colorClass: 'from-green-400 to-emerald-500',
+          icon: 'leaf',
+          tag: 'Kelas 3',
+          description: 'Menjelajahi dunia alam sekitar: tumbuhan, hewan, cuaca, dan lingkungan hidup. Belajar melalui eksperimen kecil dan pengamatan langsung.',
+          modules: [
+            { title: 'Bagian-bagian Tumbuhan', completed: true },
+            { title: 'Hewan Peliharaan dan Liar', completed: true },
+            { title: 'Cuaca dan Musim', completed: true },
+          ]
+        },
+        {
+          id: 304,
+          title: 'Seni Budaya dan Prakarya',
+          teacher: 'Bu Lina Kusuma',
+          finalScore: 94,
+          gradeLetter: 'A',
+          colorClass: 'from-amber-400 to-orange-500',
+          icon: 'palette',
+          tag: 'Kelas 3',
+          description: 'Berkreasi dengan warna, bentuk, dan berbagai bahan. Mengenal budaya daerah melalui seni lukis, kerajinan tangan, dan lagu anak.',
+          modules: [
+            { title: 'Menggambar Alam Sekitar', completed: true },
+            { title: 'Membuat Kerajinan dari Kertas', completed: true },
+            { title: 'Lagu Daerah Nusantara', completed: true },
+          ]
+        },
+      ]
+    },
+    {
+      period: 'Kelas 2',
+      year: '2023/2024',
+      courses: [
+        {
+          id: 311,
+          title: 'Berhitung Asyik',
+          teacher: 'Bu Endang Sri',
+          finalScore: 83,
+          gradeLetter: 'B',
+          colorClass: 'from-sky-300 to-cyan-400',
+          icon: 'hash',
+          tag: 'Kelas 2',
+          description: 'Belajar berhitung dari angka 1 sampai 100 dengan cara yang menyenangkan menggunakan gambar, lagu, dan permainan kelompok.',
+          modules: [
+            { title: 'Mengenal Angka 1–100', completed: true },
+            { title: 'Penjumlahan dengan Jari', completed: true },
+            { title: 'Pengurangan Sederhana', completed: true },
+          ]
+        },
+        {
+          id: 312,
+          title: 'Membaca dan Menulis',
+          teacher: 'Bu Rika Permata',
+          finalScore: 90,
+          gradeLetter: 'A',
+          colorClass: 'from-fuchsia-400 to-violet-500',
+          icon: 'pencil',
+          tag: 'Kelas 2',
+          description: 'Meningkatkan kemampuan membaca lancar dan menulis huruf tegak bersambung. Mengenal kosakata baru melalui cerita bergambar yang menarik.',
+          modules: [
+            { title: 'Membaca Suku Kata', completed: true },
+            { title: 'Menulis Huruf Kapital', completed: true },
+            { title: 'Kosakata Sehari-hari', completed: true },
+          ]
+        },
+        {
+          id: 313,
+          title: 'Lingkungan Hidupku',
+          teacher: 'Pak Doni Aditya',
+          finalScore: 87,
+          gradeLetter: 'A',
+          colorClass: 'from-teal-400 to-green-500',
+          icon: 'tree-pine',
+          tag: 'Kelas 2',
+          description: 'Mengenal lingkungan rumah, sekolah, dan sekitarnya. Belajar menjaga kebersihan dan menyayangi alam.',
+          modules: [
+            { title: 'Lingkungan Rumahku', completed: true },
+            { title: 'Menjaga Kebersihan Sekolah', completed: true },
+          ]
+        },
+      ]
+    },
+    {
+      period: 'Kelas 1',
+      year: '2022/2023',
+      courses: [
+        {
+          id: 321,
+          title: 'Mengenal Angka',
+          teacher: 'Bu Endang Sri',
+          finalScore: 80,
+          gradeLetter: 'B',
+          colorClass: 'from-sky-200 to-blue-300',
+          icon: 'list-ordered',
+          tag: 'Kelas 1',
+          description: 'Pengenalan angka 1 sampai 20, belajar menghitung benda-benda di sekitar dengan cara yang menyenangkan.',
+          modules: [
+            { title: 'Angka 1 sampai 10', completed: true },
+            { title: 'Angka 11 sampai 20', completed: true },
+          ]
+        },
+        {
+          id: 322,
+          title: 'Mengenal Huruf',
+          teacher: 'Bu Rika Permata',
+          finalScore: 86,
+          gradeLetter: 'A',
+          colorClass: 'from-pink-300 to-rose-400',
+          icon: 'type',
+          tag: 'Kelas 1',
+          description: 'Mengenal 26 huruf alfabet, belajar membaca suku kata pertama, dan menulis nama sendiri.',
+          modules: [
+            { title: 'Huruf A sampai M', completed: true },
+            { title: 'Huruf N sampai Z', completed: true },
+            { title: 'Membaca Suku Kata Pertama', completed: true },
+          ]
+        },
+        {
+          id: 323,
+          title: 'Dunia di Sekitarku',
+          teacher: 'Pak Doni Aditya',
+          finalScore: 92,
+          gradeLetter: 'A',
+          colorClass: 'from-lime-300 to-green-400',
+          icon: 'globe',
+          tag: 'Kelas 1',
+          description: 'Mengenal anggota keluarga, profesi, dan lingkungan sekitar melalui gambar dan cerita sederhana.',
+          modules: [
+            { title: 'Keluargaku', completed: true },
+            { title: 'Profesi dan Pekerjaan', completed: true },
+          ]
+        },
+      ]
+    },
+  ],
+
+  smk: [
+    {
+      period: 'Kelas X',
+      year: '2024/2025',
+      courses: [
+        {
+          id: 401,
+          title: 'Dasar-dasar Pemrograman',
+          teacher: 'Pak Budi Santoso',
+          finalScore: 82,
+          gradeLetter: 'B',
+          colorClass: 'from-violet-400 to-purple-600',
+          icon: 'code-2',
+          tag: 'Kelas X',
+          description: 'Pengenalan logika pemrograman, algoritma, flowchart, dan pemrograman dasar menggunakan Python. Menjadi fondasi untuk seluruh mata pelajaran kejuruan RPL.',
+          modules: [
+            { title: 'Pengenalan Algoritma & Flowchart', completed: true },
+            { title: 'Tipe Data dan Variabel', completed: true },
+            { title: 'Percabangan (if-else)', completed: true },
+            { title: 'Perulangan (for & while)', completed: true },
+            { title: 'Fungsi dan Prosedur', completed: true },
+          ]
+        },
+        {
+          id: 402,
+          title: 'Jaringan Komputer Dasar',
+          teacher: 'Pak Agus Prayitno',
+          finalScore: 78,
+          gradeLetter: 'B',
+          colorClass: 'from-cyan-400 to-sky-600',
+          icon: 'network',
+          tag: 'Kelas X',
+          description: 'Konsep dasar jaringan komputer: topologi, protokol TCP/IP, subnetting, dan pengenalan perangkat jaringan (router, switch, hub).',
+          modules: [
+            { title: 'Pengenalan Jaringan Komputer', completed: true },
+            { title: 'Topologi Jaringan', completed: true },
+            { title: 'Protokol TCP/IP', completed: true },
+            { title: 'Pengenalan Subnetting', completed: true },
+          ]
+        },
+        {
+          id: 403,
+          title: 'Sistem Komputer',
+          teacher: 'Bu Dewi Rahayu',
+          finalScore: 85,
+          gradeLetter: 'A',
+          colorClass: 'from-slate-400 to-gray-600',
+          icon: 'cpu',
+          tag: 'Kelas X',
+          description: 'Arsitektur komputer, komponen hardware (CPU, RAM, storage), sistem operasi dasar, dan manajemen file menggunakan Windows dan Linux.',
+          modules: [
+            { title: 'Komponen Hardware Komputer', completed: true },
+            { title: 'Sistem Operasi Windows', completed: true },
+            { title: 'Pengenalan Linux CLI', completed: true },
+            { title: 'Manajemen File & Folder', completed: true },
+          ]
+        },
+        {
+          id: 404,
+          title: 'Matematika Peminatan TIK',
+          teacher: 'Bu Nita Sari',
+          finalScore: 74,
+          gradeLetter: 'B',
+          colorClass: 'from-orange-400 to-amber-500',
+          icon: 'sigma',
+          tag: 'Kelas X',
+          description: 'Matematika terapan untuk kebutuhan teknologi informasi: logika matematika, himpunan, relasi, fungsi, dan aljabar boolean.',
+          modules: [
+            { title: 'Logika Matematika', completed: true },
+            { title: 'Himpunan dan Relasi', completed: true },
+            { title: 'Fungsi & Komposisi', completed: true },
+            { title: 'Aljabar Boolean', completed: true },
+          ]
+        },
+      ]
+    },
+  ],
+
+  kuliah: [
+    {
+      period: 'Semester 3',
+      year: '2025/2026 Ganjil',
+      courses: [
+        {
+          id: 501,
+          title: 'Basis Data Lanjut',
+          teacher: 'Dr. Rina Wijaya',
+          finalScore: 85,
+          gradeLetter: 'A',
+          colorClass: 'from-indigo-500 to-blue-700',
+          icon: 'database',
+          tag: 'Semester 3',
+          description: 'Normalisasi database tingkat lanjut (BCNF, 4NF), transaksi ACID, stored procedure, trigger, dan optimalisasi query pada MySQL dan PostgreSQL.',
+          modules: [
+            { title: 'Review Normalisasi 1NF–3NF', completed: true },
+            { title: 'BCNF dan 4NF', completed: true },
+            { title: 'Transaksi & ACID Properties', completed: true },
+            { title: 'Stored Procedure & Trigger', completed: true },
+            { title: 'Query Optimization & Indexing', completed: true },
+          ]
+        },
+        {
+          id: 502,
+          title: 'Pemrograman Berorientasi Objek',
+          teacher: 'Ir. Hendra Gunawan, M.T.',
+          finalScore: 88,
+          gradeLetter: 'A',
+          colorClass: 'from-blue-500 to-indigo-600',
+          icon: 'boxes',
+          tag: 'Semester 3',
+          description: 'Paradigma OOP menggunakan Java: enkapsulasi, inheritansi, polimorfisme, interface, abstract class, design pattern dasar (Singleton, Factory, Observer).',
+          modules: [
+            { title: 'Prinsip OOP: Enkapsulasi', completed: true },
+            { title: 'Inheritansi & Polimorfisme', completed: true },
+            { title: 'Interface & Abstract Class', completed: true },
+            { title: 'Design Pattern: Singleton & Factory', completed: true },
+            { title: 'Collections & Generics', completed: true },
+          ]
+        },
+        {
+          id: 503,
+          title: 'Jaringan Komputer',
+          teacher: 'Dr. Fajar Nugraha',
+          finalScore: 79,
+          gradeLetter: 'B',
+          colorClass: 'from-teal-500 to-cyan-600',
+          icon: 'wifi',
+          tag: 'Semester 3',
+          description: 'Arsitektur jaringan komputer (OSI & TCP/IP model), routing, switching, VLAN, keamanan jaringan dasar, dan konfigurasi menggunakan Cisco Packet Tracer.',
+          modules: [
+            { title: 'Model OSI & TCP/IP', completed: true },
+            { title: 'IP Addressing & Subnetting', completed: true },
+            { title: 'Routing Statis & Dinamis (RIP)', completed: true },
+            { title: 'VLAN & Inter-VLAN Routing', completed: true },
+          ]
+        },
+        {
+          id: 504,
+          title: 'Statistika untuk Informatika',
+          teacher: 'Dr. Sinta Melati',
+          finalScore: 82,
+          gradeLetter: 'B',
+          colorClass: 'from-purple-500 to-violet-600',
+          icon: 'bar-chart-2',
+          tag: 'Semester 3',
+          description: 'Probabilitas, distribusi statistik, pengujian hipotesis, regresi linier, dan analisis data menggunakan Python (NumPy, Pandas, Matplotlib).',
+          modules: [
+            { title: 'Statistika Deskriptif', completed: true },
+            { title: 'Probabilitas & Distribusi', completed: true },
+            { title: 'Pengujian Hipotesis', completed: true },
+            { title: 'Regresi Linier Sederhana', completed: true },
+          ]
+        },
+      ]
+    },
+    {
+      period: 'Semester 2',
+      year: '2024/2025 Genap',
+      courses: [
+        {
+          id: 511,
+          title: 'Struktur Data',
+          teacher: 'Dr. Rina Wijaya',
+          finalScore: 80,
+          gradeLetter: 'B',
+          colorClass: 'from-emerald-500 to-green-600',
+          icon: 'git-branch',
+          tag: 'Semester 2',
+          description: 'Array, linked list, stack, queue, tree (BST, AVL), graph, dan hashing. Implementasi menggunakan Java dengan analisis kompleksitas waktu dan ruang.',
+          modules: [
+            { title: 'Array & Linked List', completed: true },
+            { title: 'Stack & Queue', completed: true },
+            { title: 'Binary Search Tree (BST)', completed: true },
+            { title: 'Graph & BFS/DFS', completed: true },
+            { title: 'Hashing & Hash Table', completed: true },
+          ]
+        },
+        {
+          id: 512,
+          title: 'Pemrograman Web Lanjut',
+          teacher: 'Ir. Hendra Gunawan, M.T.',
+          finalScore: 91,
+          gradeLetter: 'A',
+          colorClass: 'from-orange-500 to-red-500',
+          icon: 'globe-2',
+          tag: 'Semester 2',
+          description: 'Pengembangan web modern menggunakan PHP Laravel, RESTful API, autentikasi JWT, dan dasar-dasar Vue.js untuk front-end interaktif.',
+          modules: [
+            { title: 'PHP & MVC Pattern (Laravel)', completed: true },
+            { title: 'Database Migration & Eloquent ORM', completed: true },
+            { title: 'RESTful API dengan Laravel', completed: true },
+            { title: 'Autentikasi JWT', completed: true },
+            { title: 'Intro Vue.js & Axios', completed: true },
+          ]
+        },
+        {
+          id: 513,
+          title: 'Matematika Diskrit',
+          teacher: 'Dr. Sinta Melati',
+          finalScore: 74,
+          gradeLetter: 'B',
+          colorClass: 'from-pink-500 to-rose-600',
+          icon: 'function-square',
+          tag: 'Semester 2',
+          description: 'Logika proposisi, teori himpunan, relasi dan fungsi, kombinatorik, teori graf, dan aljabar boolean — fondasi matematika untuk ilmu komputer.',
+          modules: [
+            { title: 'Logika Proposisi & Predikat', completed: true },
+            { title: 'Teori Himpunan & Relasi', completed: true },
+            { title: 'Kombinatorik (Permutasi & Kombinasi)', completed: true },
+            { title: 'Teori Graf Dasar', completed: true },
+          ]
+        },
+        {
+          id: 514,
+          title: 'Basis Data',
+          teacher: 'Dr. Rina Wijaya',
+          finalScore: 87,
+          gradeLetter: 'A',
+          colorClass: 'from-cyan-500 to-blue-600',
+          icon: 'table',
+          tag: 'Semester 2',
+          description: 'Pengenalan basis data relasional, model ER, normalisasi 1NF–3NF, dan query SQL (DDL, DML, DQL) menggunakan MySQL.',
+          modules: [
+            { title: 'Model Entity-Relationship (ER)', completed: true },
+            { title: 'Normalisasi 1NF, 2NF, 3NF', completed: true },
+            { title: 'SQL DDL: CREATE, ALTER, DROP', completed: true },
+            { title: 'SQL DML: SELECT, JOIN, Subquery', completed: true },
+          ]
+        },
+      ]
+    },
+    {
+      period: 'Semester 1',
+      year: '2024/2025 Ganjil',
+      courses: [
+        {
+          id: 521,
+          title: 'Algoritma & Pemrograman',
+          teacher: 'Ir. Hendra Gunawan, M.T.',
+          finalScore: 86,
+          gradeLetter: 'A',
+          colorClass: 'from-violet-500 to-indigo-600',
+          icon: 'braces',
+          tag: 'Semester 1',
+          description: 'Dasar pemrograman prosedural menggunakan C/Python, flowchart, pseudocode, array, fungsi, dan pengenalan rekursi.',
+          modules: [
+            { title: 'Algoritma & Flowchart Dasar', completed: true },
+            { title: 'Variabel, Tipe Data & Operator', completed: true },
+            { title: 'Percabangan & Perulangan', completed: true },
+            { title: 'Array & Fungsi', completed: true },
+            { title: 'Pengenalan Rekursi', completed: true },
+          ]
+        },
+        {
+          id: 522,
+          title: 'Kalkulus 1',
+          teacher: 'Dr. Sinta Melati',
+          finalScore: 72,
+          gradeLetter: 'C',
+          colorClass: 'from-amber-500 to-yellow-500',
+          icon: 'trending-up',
+          tag: 'Semester 1',
+          description: 'Limit, turunan (diferensiasi) fungsi satu variabel, aturan rantai, maksimum-minimum, dan aplikasi turunan dalam pemodelan.',
+          modules: [
+            { title: 'Limit Fungsi', completed: true },
+            { title: 'Turunan & Aturan Diferensiasi', completed: true },
+            { title: 'Aturan Rantai (Chain Rule)', completed: true },
+            { title: 'Aplikasi Turunan: Maks & Min', completed: true },
+          ]
+        },
+        {
+          id: 523,
+          title: 'Pengantar Teknologi Informasi',
+          teacher: 'Dr. Fajar Nugraha',
+          finalScore: 89,
+          gradeLetter: 'A',
+          colorClass: 'from-sky-400 to-blue-500',
+          icon: 'monitor',
+          tag: 'Semester 1',
+          description: 'Sejarah komputer, perkembangan teknologi informasi, etika digital, keamanan siber dasar, dan pengenalan sistem informasi.',
+          modules: [
+            { title: 'Sejarah & Generasi Komputer', completed: true },
+            { title: 'Perangkat Keras & Lunak', completed: true },
+            { title: 'Etika Digital & Privasi', completed: true },
+            { title: 'Pengenalan Sistem Informasi', completed: true },
+          ]
+        },
+        {
+          id: 524,
+          title: 'Bahasa Inggris Teknis',
+          teacher: 'Bu Margaretha A.M.',
+          finalScore: 83,
+          gradeLetter: 'B',
+          colorClass: 'from-red-400 to-rose-500',
+          icon: 'languages',
+          tag: 'Semester 1',
+          description: 'Penguasaan kosakata teknis IT, membaca dokumentasi berbahasa Inggris, writing technical report, dan presentasi dalam Bahasa Inggris.',
+          modules: [
+            { title: 'Technical Vocabulary for IT', completed: true },
+            { title: 'Reading Technical Documentation', completed: true },
+            { title: 'Writing a Technical Report', completed: true },
+          ]
+        },
+      ]
+    },
+  ],
+};
