@@ -1,8 +1,9 @@
 import { sidebarTexts, coursesData } from './db.js';
+import { getState } from './store.js';
 
 (function() {
-  const eduLevel = localStorage.getItem('edu-level') || 'smk';
-  const username = localStorage.getItem('username') || 'Keane';
+  const eduLevel = getState('edu-level', 'smk');
+  const username = getState('username', 'Keane');
 
   // 1. Dynamic Profile Info
   const profileName = document.getElementById('profile-name');
@@ -57,7 +58,7 @@ import { sidebarTexts, coursesData } from './db.js';
     }
 
     courses.forEach(course => {
-      const savedProg = localStorage.getItem(`progress-course-${course.id}`);
+      const savedProg = getState(`progress-course-${course.id}`);
       const courseProgress = savedProg !== null ? parseInt(savedProg) : course.progress;
       const isCompleted = courseProgress === 100;
       const accentTextColor = eduLevel === 'sd' ? 'text-sky-600' : (eduLevel === 'kuliah' ? 'text-indigo-600' : 'text-accent-600');

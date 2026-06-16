@@ -1,8 +1,9 @@
 import { sidebarTexts, coursesData } from './db.js';
+import { getState, setState } from './store.js';
 
 (function() {
-  const eduLevel = localStorage.getItem('edu-level') || 'smk';
-  const username = localStorage.getItem('username') || 'Keane';
+  const eduLevel = getState('edu-level', 'smk');
+  const username = getState('username', 'Keane');
 
   // 1. Parse URL ID
   const urlParams = new URLSearchParams(window.location.search);
@@ -63,10 +64,10 @@ import { sidebarTexts, coursesData } from './db.js';
   const capIcon = document.querySelector('aside .text-accent-600');
 
   // Load saved dynamic progress/stars
-  const savedProgress = localStorage.getItem(`progress-course-${course.id}`);
+  const savedProgress = getState(`progress-course-${course.id}`);
   const courseProgressVal = savedProgress !== null ? parseInt(savedProgress) : course.progress;
   
-  const savedStars = localStorage.getItem(`kuis-stars-${course.id}`) || 0;
+  const savedStars = getState(`kuis-stars-${course.id}`) || 0;
 
   // Apply colors and layout configs
   if (eduLevel === 'sd') {
@@ -123,7 +124,7 @@ import { sidebarTexts, coursesData } from './db.js';
     if (courseBanner) courseBanner.className = 'bg-gradient-smk rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-amber-400 relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px] hover-lift';
     if (courseBadge) courseBadge.textContent = 'SMK RPL - ' + course.tag;
     if (infoWeight) {
-      infoWeight.innerHTML = `<span class="text-surface-500 flex items-center gap-2"><i data-lucide="award" class="w-4.5 h-4.5 text-amber-500"></i>Semester</span> <span class="font-bold text-surface-900">${course.tag}</span>`;
+      infoWeight.innerHTML = `<span class="text-surface-500 flex items-center gap-2"><i data-lucide="award" class="w-4.5 h-4.5 text-amber-500"></i>Kelas</span> <span class="font-bold text-surface-900">${course.tag}</span>`;
     }
     if (infoStatus) {
       if (courseProgressVal === 100) {
@@ -158,22 +159,22 @@ import { sidebarTexts, coursesData } from './db.js';
     if (infoProgressPct) infoProgressPct.textContent = `${computedPct}%`;
     if (infoProgressBar) infoProgressBar.style.width = `${computedPct}%`;
 
-    localStorage.setItem(`progress-course-${course.id}`, computedPct);
+    setState(`progress-course-${course.id}`, computedPct);
   };
 
   // Local storage modules state to enable completion toggles!
   const getSavedModules = () => {
     const key = `modules-course-${course.id}`;
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
+    const raw = getState(key);
+    if (raw) return raw;
     
     // Save defaults
-    localStorage.setItem(key, JSON.stringify(course.modules));
+    setState(key, course.modules);
     return course.modules;
   };
 
   const saveModulesState = (modules) => {
-    localStorage.setItem(`modules-course-${course.id}`, JSON.stringify(modules));
+    setState(`modules-course-${course.id}`, modules);
     renderHeaderProgress();
   };
 
@@ -286,7 +287,7 @@ import { sidebarTexts, coursesData } from './db.js';
       };
 
       const taskKey = `tugas-status-${course.id}`;
-      const isSubmitted = localStorage.getItem(taskKey) === 'true';
+      const isSubmitted = getState(taskKey) === 'true' || getState(taskKey) === true;
 
       const fileInputId = `file-uploader-${course.id}`;
       
@@ -408,7 +409,7 @@ import { sidebarTexts, coursesData } from './db.js';
                 clearInterval(interval);
                 
                 // Save task submission to localStorage
-                localStorage.setItem(taskKey, 'true');
+                setState(taskKey, 'true');
                 
                 // Re-render
                 renderTabContent();
@@ -505,7 +506,7 @@ import { sidebarTexts, coursesData } from './db.js';
             }
 
             // Award 10 stars
-            localStorage.setItem(`kuis-stars-${course.id}`, 10);
+            setState(`kuis-stars-${course.id}`, 10);
             
             // Update widget
             if (sdStarWidget && sdStarsCountLabel) {
@@ -524,8 +525,8 @@ import { sidebarTexts, coursesData } from './db.js';
     else if (activeTab === 'diskusi') {
       const getForumMessages = () => {
         const key = `forum-course-${course.id}`;
-        const raw = localStorage.getItem(key);
-        if (raw) return JSON.parse(raw);
+        const raw = getState(key);
+        if (raw) return raw;
 
         // Save default academic forum messages
         const defaultMessages = [
@@ -533,7 +534,7 @@ import { sidebarTexts, coursesData } from './db.js';
           { name: 'Nabila Putri', role: 'Mahasiswa', text: 'Selamat siang Pak. Izin bertanya, untuk pemodelan UML apakah harus dijabarkan secara rinci sampai ke sequence diagram atau cukup structural diagram saja?', time: '11:32 WIB' },
           { name: course.teacher, role: 'Pengajar', text: 'Sequence diagram wajib dijabarkan terperinci untuk usecase skenario utama yang memiliki kompleksitas tinggi. Untuk usecase pelengkap cukup class diagram saja.', time: '11:40 WIB' }
         ];
-        localStorage.setItem(key, JSON.stringify(defaultMessages));
+        setState(key, defaultMessages);
         return defaultMessages;
       };
 
@@ -615,7 +616,7 @@ import { sidebarTexts, coursesData } from './db.js';
 
         const list = getForumMessages();
         list.push(newMsg);
-        localStorage.setItem(`forum-course-${course.id}`, JSON.stringify(list));
+        setState(`forum-course-${course.id}`, list);
 
         forumInput.value = '';
         renderTabContent();

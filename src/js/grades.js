@@ -1,8 +1,9 @@
 import { sidebarTexts, coursesData } from './db.js';
+import { getState } from './store.js';
 
 (function() {
-  const eduLevel = localStorage.getItem('edu-level') || 'smk';
-  const username = localStorage.getItem('username') || 'Keane';
+  const eduLevel = getState('edu-level', 'smk');
+  const username = getState('username', 'Keane');
 
   // 1. Sidebar Navigation Text Mapping (Sync with main.js)
   const currentSidebar = sidebarTexts[eduLevel];
@@ -49,7 +50,7 @@ import { sidebarTexts, coursesData } from './db.js';
     let totalStars = 0;
     const courseStars = {};
     courses.forEach(c => {
-      const stars = parseInt(localStorage.getItem(`kuis-stars-${c.id}`) || 0);
+      const stars = parseInt(getState(`kuis-stars-${c.id}`) || 0);
       courseStars[c.id] = stars;
       totalStars += stars;
     });
@@ -58,7 +59,7 @@ import { sidebarTexts, coursesData } from './db.js';
     const badges = [
       { id: 1, name: 'Juara Angka 🔢', desc: 'Selesaikan kuis Matematika Ceria dengan 10 Bintang', icon: 'calculator', color: 'bg-sky-100 text-sky-600 border-sky-200', unlocked: courseStars[1] >= 10 },
       { id: 2, name: 'Kutu Buku Cilik 📖', desc: 'Selesaikan kuis Bahasa Indonesia dengan 10 Bintang', icon: 'book-open', color: 'bg-emerald-100 text-emerald-600 border-emerald-200', unlocked: courseStars[2] >= 10 },
-      { id: 3, name: 'Pelukis Hebat 🎨', desc: 'Menggambar & Mewarnai mencapai progres 100%', icon: 'palette', color: 'bg-purple-100 text-purple-600 border-purple-200', unlocked: (localStorage.getItem('progress-course-3') || 100) == 100 },
+      { id: 3, name: 'Pelukis Hebat 🎨', desc: 'Menggambar & Mewarnai mencapai progres 100%', icon: 'palette', color: 'bg-purple-100 text-purple-600 border-purple-200', unlocked: (getState('progress-course-3') || 100) == 100 },
       { id: 4, name: 'Sahabat Garuda 🦅', desc: 'Selesaikan kuis Pendidikan Pancasila dengan 10 Bintang', icon: 'heart', color: 'bg-rose-100 text-rose-600 border-rose-200', unlocked: courseStars[4] >= 10 }
     ];
 
@@ -201,7 +202,7 @@ import { sidebarTexts, coursesData } from './db.js';
     const itemsHTML = [];
 
     courses.forEach(c => {
-      const savedProg = localStorage.getItem(`progress-course-${c.id}`);
+      const savedProg = getState(`progress-course-${c.id}`);
       const progressVal = savedProg !== null ? parseInt(savedProg) : c.progress;
       
       // Calculate dynamic mock score (e.g. progress = 100 -> score 95, progress = 65 -> score 78)
@@ -340,7 +341,7 @@ import { sidebarTexts, coursesData } from './db.js';
       // SKS weight parsing from tag (e.g. "3 SKS" -> 3)
       const sksVal = parseInt(c.tag.replace(/\D/g, '')) || 3;
       
-      const savedProg = localStorage.getItem(`progress-course-${c.id}`);
+      const savedProg = getState(`progress-course-${c.id}`);
       const progressVal = savedProg !== null ? parseInt(savedProg) : c.progress;
 
       // Dynamic calculation helper

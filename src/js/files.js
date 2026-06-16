@@ -1,8 +1,9 @@
 import { sidebarTexts } from './db.js';
+import { getState, setState } from './store.js';
 
 (function() {
-  const eduLevel = localStorage.getItem('edu-level') || 'smk';
-  const username = localStorage.getItem('username') || 'Keane';
+  const eduLevel = getState('edu-level', 'smk');
+  const username = getState('username', 'Keane');
 
   // 1. Sidebar Navigation Text Mapping
   const currentSidebar = sidebarTexts[eduLevel];
@@ -65,17 +66,17 @@ import { sidebarTexts } from './db.js';
 
   const getFiles = () => {
     const key = `personal-files-${eduLevel}`;
-    const raw = localStorage.getItem(key);
-    if (raw) return JSON.parse(raw);
+    const raw = getState(key);
+    if (raw) return raw;
     
     // Save default mock files
-    localStorage.setItem(key, JSON.stringify(initialFiles[eduLevel]));
+    setState(key, initialFiles[eduLevel]);
     return initialFiles[eduLevel];
   };
 
   const saveFiles = (filesList) => {
     const key = `personal-files-${eduLevel}`;
-    localStorage.setItem(key, JSON.stringify(filesList));
+    setState(key, filesList);
     renderFiles();
   };
 
@@ -111,7 +112,8 @@ import { sidebarTexts } from './db.js';
     if (eduLevel === 'smk' || eduLevel === 'kuliah') {
       const isKuliah = eduLevel === 'kuliah';
       const limitGB = isKuliah ? 15 : 10;
-      const capacityPct = Math.min(((currentMB / limitGB) * 100), 100).toFixed(1);
+      const limitMB = limitGB * 1024;
+      const capacityPct = Math.min(((currentMB / limitMB) * 100), 100).toFixed(1);
       const strokeDasharray = 226.2;
       const strokeDashoffset = strokeDasharray - (strokeDasharray * capacityPct) / 100;
       

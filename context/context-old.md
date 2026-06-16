@@ -1,6 +1,6 @@
 # Project Context: SekolahMu (LMS DevLearn)
 
-SekolahMu (LMS DevLearn) adalah prototipe aplikasi Learning Management System (LMS) berbasis web interaktif. Aplikasi ini dirancang agar kompatibel dengan template Moodle namun dengan desain modern, premium, responsif, dan adaptif terhadap tiga jenjang pendidikan yang berbeda: **Sekolah Dasar (SD)**, **Sekolah Menengah Kejuruan (SMK)**, dan **Perguruan Tinggi (Kuliah)**.
+SekolahMu (LMS DevLearn) adalah prototipe aplikasi Learning Management System (LMS) berbasis web interaktif yang dirancang khusus untuk mendukung berbagai jenjang sekolah dengan desain modern, premium, responsif, serta adaptif terhadap tiga tingkat pendidikan yang berbeda: **Sekolah Dasar (SD)**, **Sekolah Menengah Kejuruan (SMK)**, dan **Perguruan Tinggi (Kuliah)**.
 
 ---
 
@@ -21,12 +21,12 @@ SekolahMu (LMS DevLearn) adalah prototipe aplikasi Learning Management System (L
 ---
 
 ## 🎨 Premium Visual Elements (Visual Overhaul)
-Aplikasi ini menerapkan standar UI modern dengan kualitas visual tinggi:
-*   **Dynamic Background Blobs:** Lingkaran warna gradasi melayang di latar belakang (`bg-accent-300` & `bg-primary-300`) yang secara halus beradaptasi warnanya mengikuti tema tingkat pendidikan aktif.
-*   **Glassmorphism Layout:** Sidebar navigasi samping dan topbar menggunakan efek `.glass-panel` transparan dengan filter blur tebal (`backdrop-blur-xl bg-white/70 border-white/40 shadow-xl relative`).
-*   **Animasi Dropdown:** Dropdown Notifikasi dan Profil menggunakan `@keyframes fadeInScale` sehingga meluncur dan membesar secara organik (`scale` dan `opacity`) dengan kurva transisi *cubic-bezier* premium saat dibuka.
-*   **High Stacking Context:** Parent `header` diposisikan dengan `z-30` di seluruh berkas HTML untuk memastikan seluruh menu dropdown melayang di atas konten utama tanpa ada overlap dari efek transform pada welcome banner.
-*   **Universal Interactive Transition:** Semua elemen interaktif (`a`, `button`, `select`, `input`, `.level-card`, `.course-card`) menggunakan transisi lambat `transition-all 0.25s` untuk memberikan umpan balik visual yang premium.
+Aplikasi ini telah selesai dirombak secara visual dengan standar UI modern kualitas premium:
+*   **Dynamic Background Blobs:** Lingkaran warna gradasi melayang di latar belakang menggunakan kelas `.blob` (`.blob-1` & `.blob-2`) dengan animasi `@keyframes blob-drift` yang beradaptasi secara dinamis sesuai tema tingkat pendidikan aktif.
+*   **Glassmorphism Layout:** Seluruh sidebar, header topbar, kartu bento, widget, dan modal menggunakan efek `.glass-panel` transparan (`backdrop-filter: blur(20px) saturate(180%); background: rgba(255, 255, 255, 0.72); border: 1px solid rgba(255, 255, 255, 0.45); box-shadow: var(--shadow-glass)`).
+*   **Animasi Dropdown:** Dropdown Notifikasi dan Profil menggunakan kelas `.dropdown-menu` dengan `@keyframes fadeInScale` sehingga meluncur dan membesar secara organik (`scale` dan `opacity`) dengan kurva transisi *cubic-bezier* premium dari kanan atas.
+*   **High Stacking Context:** Elemen parent `header` diposisikan dengan `z-35` dan menu dropdown dengan `z-50` untuk memastikan menu melayang di atas konten utama tanpa tertimpa konten welcome banner atau efek transform pada welcome banner.
+*   **Universal Interactive Transition & Hover Effect:** Semua elemen interaktif (`a`, `button`, `select`, `input`, `.level-card`, `.course-card`) menerapkan transisi halus (`transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1)`) dan kartu utama memiliki efek `.hover-lift` (`translateY(-4px)` + bayangan melayang).
 
 ---
 
@@ -96,10 +96,10 @@ Menyediakan modul modular ekspor:
 - `coursesData`: Data struktural kelas, berisi judul, pengampu, deskripsi, daftar sub-modul materi, soal kuis bergambar (SD), target tugas (SMK/Kuliah).
 
 ### 2. SekolahMu Buddy (`src/js/buddy.js`)
-Sebuah floating widget Virtual Pet yang disuntikkan ke seluruh halaman:
-- **Animasi:** Efek melayang dinamis pada avatar lewat `@keyframes buddy-float`.
-- **Greeting/Speech Bubble:** Mengeluarkan balon dialog berisi sapaan ramah berkala.
-- **Console Obrolan:** Panel chat dengan gelembung pesan asimetris (`rounded-tl-none` untuk bot, `rounded-tr-none` untuk user) serta efek gradasi warna. Membalas kata kunci seperti `tips`, `tugas`, `bintang`/`level`, atau `lelucon` secara real-time.
+Sebuah floating widget Virtual Pet yang disuntikkan ke seluruh halaman (dengan `z-50` agar melayang di atas semua konten):
+- **Animasi:** Efek melayang dinamis pada avatar lewat `@keyframes buddy-float` dan styling tombol avatar melingkar 56px (`w-14 h-14`).
+- **Greeting/Speech Bubble:** Mengeluarkan balon dialog berisi sapaan ramah berkala dengan background semi-transparan `bg-white/95` dan drop shadow.
+- **Console Obrolan:** Panel chat bergaya `.glass-panel` (lebar `w-72`) dengan gelembung pesan asimetris. Balon pesan bot menggunakan `bg-gray-100 text-surface-800` sedangkan balon pesan user menggunakan `bg-accent` (gradient linear yang adaptif dengan tema jenjang aktif). Membalas kata kunci seperti `tips`, `tugas`, `bintang`/`level`, atau `lelucon` secara real-time.
 
 ### 3. Modul Kuis Ceria (`src/js/course-detail.js` - SD Only)
 - Menghitung jawaban benar-salah. Jika benar 100%, memicu trigger kembang api **Canvas Confetti** (`canvas-confetti` library), memberikan 10 Bintang Prestasi, dan memperbarui evolusi pet Piko.

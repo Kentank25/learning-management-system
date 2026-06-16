@@ -318,7 +318,7 @@ export const coursesData = {
       status: 'ongoing',
       colorClass: 'from-indigo-500 to-purple-600',
       icon: 'database',
-      tag: 'Smt 4',
+      tag: 'Kelas XI',
       description: 'Materi kejuruan RPL berfokus pada perancangan basis data relasional. Anda akan mempelajari normalisasi 1NF-3NF, bahasa query SQL (DDL, DML, DCL), indexing, relasi tabel, dan optimalisasi query MySQL.',
       modules: [
         { id: 1, title: 'Modul 1: Pengantar Relational Database Management System (RDBMS)', dur: '45 menit', completed: true },
@@ -338,7 +338,7 @@ export const coursesData = {
       status: 'ongoing',
       colorClass: 'from-emerald-400 to-teal-500',
       icon: 'layout',
-      tag: 'Smt 4',
+      tag: 'Kelas XI',
       description: 'Membangun antarmuka web modern yang responsif dan interaktif. Pembelajaran mencakup kerangka kerja modern, CSS Grid & Flexbox, praprosesor, manipulasi DOM, serta integrasi Tailwind CSS.',
       modules: [
         { id: 1, title: 'Modul 1: Sintaksis HTML5 Semantik & SEO Dasar', dur: '40 menit', completed: true },
@@ -358,7 +358,7 @@ export const coursesData = {
       status: 'completed',
       colorClass: 'from-blue-500 to-cyan-500',
       icon: 'code',
-      tag: 'Smt 4',
+      tag: 'Kelas XI',
       description: 'Menguasai paradigma Object-Oriented Programming (OOP) menggunakan bahasa Java. Mempelajari konsep inti Class, Object, Inheritance, Polymorphism, Encapsulation, Abstraction, serta handling exception.',
       modules: [
         { id: 1, title: 'Modul 1: Instalasi JDK dan Konsep Class/Object Java', dur: '30 menit', completed: true },
@@ -376,7 +376,7 @@ export const coursesData = {
       status: 'ongoing',
       colorClass: 'from-rose-400 to-orange-500',
       icon: 'smartphone',
-      tag: 'Smt 4',
+      tag: 'Kelas XI',
       description: 'Pengembangan aplikasi mobile lintas platform menggunakan Flutter dan bahasa Dart. Belajar siklus hidup widget (Stateless/Stateful), state management, routing, dan integrasi API RESTful.',
       modules: [
         { id: 1, title: 'Modul 1: Instalasi Flutter SDK dan Konsep Dasar Dart', dur: '45 menit', completed: true },

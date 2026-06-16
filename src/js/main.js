@@ -1,8 +1,11 @@
-// General Helper Functions & Theme Loading
+import { getState, setState } from './store.js';
+import { renderSidebar } from './components/sidebar.js';
+import { renderHeader } from './components/header.js';
+
 (function() {
   // 1. Session & Theme Check
-  const eduLevel = localStorage.getItem('edu-level');
-  const username = localStorage.getItem('username') || 'Keane';
+  const eduLevel = getState('edu-level');
+  const username = getState('username', 'Keane');
   const currentPath = window.location.pathname;
 
   // If session doesn't exist, redirect to login page (unless already on login page)
@@ -11,29 +14,32 @@
     return;
   }
 
-  // Apply theme class to body safely by clearing previous theme classes first
-  document.body.classList.remove('theme-sd', 'theme-kuliah');
-  if (eduLevel === 'sd') {
-    document.body.classList.add('theme-sd');
-  } else if (eduLevel === 'kuliah') {
-    document.body.classList.add('theme-kuliah');
-  } // SMK is default (no class needed or we use current default styles)
+  // Apply theme attribute to html document
+  if (eduLevel) {
+    document.documentElement.setAttribute('data-theme', eduLevel);
+  }
 
-  // Initialize Lucide Icons after the theme is set, ensuring DOM is fully parsed
+  // 2. Render Sidebar & Header Components
+  const sidebar = document.getElementById('sidebar');
+  const header = document.getElementById('header');
+
+  if (sidebar) {
+    sidebar.innerHTML = renderSidebar();
+  }
+  if (header) {
+    header.innerHTML = renderHeader();
+  }
+
+  // Initialize Lucide Icons after elements are added to the DOM
   const initLucide = () => {
     if (typeof lucide !== 'undefined') {
       lucide.createIcons();
     }
   };
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initLucide);
-  } else {
-    initLucide();
-  }
+  initLucide();
 
-  // 2. Mobile Menu Toggle
+  // 3. Mobile Menu Toggle
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-  const sidebar = document.getElementById('sidebar');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
 
   if (sidebar) {
@@ -70,25 +76,16 @@
     }
   }
 
-  // 3. Profile Dropdown Panel Toggle & Switcher
+  // 4. Profile Dropdown Panel Toggle & Switcher
   const profileMenuBtn = document.getElementById('profile-menu-btn');
   const profileDropdown = document.getElementById('profile-dropdown');
-  const dropdownUsername = document.getElementById('dropdown-username');
-  const dropdownRole = document.getElementById('dropdown-role');
+  const bellBtn = document.getElementById('notification-btn');
+  const notificationDropdown = document.getElementById('notification-dropdown');
 
   if (profileMenuBtn && profileDropdown) {
-    // Populate username and role
-    if (dropdownUsername) dropdownUsername.textContent = username;
-    if (dropdownRole) {
-      if (eduLevel === 'sd') dropdownRole.textContent = 'Murid Sekolah Dasar 🌟';
-      else if (eduLevel === 'kuliah') dropdownRole.textContent = 'Mahasiswa Universitas 🎓';
-      else dropdownRole.textContent = 'Siswa Kejuruan RPL 💻';
-    }
-
     profileMenuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       profileDropdown.classList.toggle('hidden');
-      // Close notifications if open
       if (notificationDropdown) notificationDropdown.classList.add('hidden');
     });
   }
@@ -98,14 +95,12 @@
   levelSwitchBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const newLevel = btn.getAttribute('data-change-level');
-      localStorage.setItem('edu-level', newLevel);
+      setState('edu-level', newLevel);
       window.location.reload();
     });
   });
 
-  // 4. Notification Dropdown Panel & Dynamic Rendering
-  const bellBtn = document.getElementById('notification-btn');
-  const notificationDropdown = document.getElementById('notification-dropdown');
+  // 5. Notification Dropdown Panel & Dynamic Rendering
   const notificationBadge = document.getElementById('notification-badge');
   const notificationList = document.getElementById('notification-list');
   const markAllReadBtn = document.getElementById('mark-all-read');
@@ -172,7 +167,6 @@
     bellBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       notificationDropdown.classList.toggle('hidden');
-      // Close profile dropdown if open
       if (profileDropdown) profileDropdown.classList.add('hidden');
     });
   }
@@ -191,19 +185,18 @@
     if (notificationDropdown) notificationDropdown.classList.add('hidden');
   });
 
-  // 5. Logout Interaction
+  // 6. Logout Interaction
   const logoutBtns = document.querySelectorAll('#logout-btn, #dropdown-logout-btn');
   logoutBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       
       // Clear session
-      localStorage.removeItem('edu-level');
-      localStorage.removeItem('username');
+      setState('edu-level', null);
+      setState('username', null);
       
       // Redirect
       window.location.href = 'login.html';
     });
   });
 })();
-

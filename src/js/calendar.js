@@ -1,8 +1,9 @@
 import { sidebarTexts, calendarData } from './db.js';
+import { getState, setState } from './store.js';
 
 (function() {
-  const eduLevel = localStorage.getItem('edu-level') || 'smk';
-  const username = localStorage.getItem('username') || 'Keane';
+  const eduLevel = getState('edu-level', 'smk');
+  const username = getState('username', 'Keane');
 
   // 1. Dynamic Profile Info
   const profileName = document.getElementById('profile-name');
@@ -91,8 +92,8 @@ import { sidebarTexts, calendarData } from './db.js';
 
   // Load custom user agendas from localStorage
   const loadCustomAgendas = () => {
-    const raw = localStorage.getItem('custom-agendas');
-    return raw ? JSON.parse(raw) : [];
+    const raw = getState('custom-agendas');
+    return raw ? raw : [];
   };
 
   // Get combined agendas (static + custom)
@@ -381,7 +382,7 @@ import { sidebarTexts, calendarData } from './db.js';
       // Save to localStorage
       const list = loadCustomAgendas();
       list.push(newAgenda);
-      localStorage.setItem('custom-agendas', JSON.stringify(list));
+      setState('custom-agendas', list);
 
       // Reset Form & Close Modal
       agendaForm.reset();

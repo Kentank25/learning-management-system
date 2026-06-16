@@ -1,3 +1,5 @@
+import { getState, setState } from './store.js';
+
 // SekolahMu Buddy - Virtual Pet Belajar Adaptif
 // This module dynamically injects a floating, interactive virtual pet buddy into the page,
 // transforming visual character designs, dialog behaviors, progression trackers, and simulated AI chat panels.
@@ -12,7 +14,7 @@ const PERSONA_CONFIGS = {
     getProgression: () => {
       let totalStars = 0;
       for (let i = 1; i <= 4; i++) {
-        totalStars += parseInt(localStorage.getItem(`kuis-stars-${i}`) || 0);
+        totalStars += parseInt(getState(`kuis-stars-${i}`) || 0);
       }
       
       let evol = 'egg';
@@ -58,9 +60,8 @@ const PERSONA_CONFIGS = {
       let totalModules = 0;
       
       for (let cId = 1; cId <= 4; cId++) {
-        const raw = localStorage.getItem(`modules-course-${cId}`);
-        if (raw) {
-          const list = JSON.parse(raw);
+        const list = getState(`modules-course-${cId}`);
+        if (list) {
           totalModules += list.length;
           totalCompleted += list.filter(m => m.completed).length;
         } else {
@@ -95,9 +96,8 @@ const PERSONA_CONFIGS = {
       let totalCompleted = 0;
       let totalModules = 0;
       for (let cId = 1; cId <= 4; cId++) {
-        const raw = localStorage.getItem(`modules-course-${cId}`);
-        if (raw) {
-          const list = JSON.parse(raw);
+        const list = getState(`modules-course-${cId}`);
+        if (list) {
           totalModules += list.length;
           totalCompleted += list.filter(m => m.completed).length;
         } else {
@@ -125,7 +125,6 @@ const PERSONA_CONFIGS = {
 };
 
 const fetchBuddyResponse = async (userMessage, level) => {
-  // Simulate network latency (250ms - 550ms) for an organic AI feel
   await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 250));
 
   const text = userMessage.toLowerCase();
@@ -148,11 +147,11 @@ const fetchBuddyResponse = async (userMessage, level) => {
 };
 
 (function() {
-  const eduLevel = localStorage.getItem('edu-level') || 'smk';
-  const username = localStorage.getItem('username') || 'Keane';
+  const eduLevel = getState('edu-level') || 'smk';
+  const username = getState('username', 'Keane');
   const config = PERSONA_CONFIGS[eduLevel];
 
-  // 1. Inject Custom Floating Animations to Document Head
+  // 1. Inject Custom Floating Animations & Minimized styles to Document Head
   if (!document.getElementById('buddy-custom-styles')) {
     const styleEl = document.createElement('style');
     styleEl.id = 'buddy-custom-styles';
@@ -169,6 +168,18 @@ const fetchBuddyResponse = async (userMessage, level) => {
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
       }
+      /* Minimized styles */
+      .buddy-minimized #buddy-avatar-btn {
+        transform: scale(0.7) !important;
+        opacity: 0.6;
+      }
+      .buddy-minimized #buddy-speech-bubble,
+      .buddy-minimized #buddy-chat-window {
+        display: none !important;
+      }
+      .buddy-dragged {
+        transition: none !important;
+      }
     `;
     document.head.appendChild(styleEl);
   }
@@ -176,21 +187,56 @@ const fetchBuddyResponse = async (userMessage, level) => {
   // 2. Build and Inject DOM Widget Structure
   const container = document.createElement('div');
   container.id = 'sekolahmu-buddy-container';
-  container.className = 'fixed bottom-6 right-6 z-40 font-sans flex flex-col items-end pointer-events-none';
+  
+  // Storing position and minimized state in store
+  const savedPos = getState('buddy-position');
+  const isMinimized = getState('buddy-minimized', false);
+  
+  let containerClasses = 'fixed z-50 font-sans pointer-events-none transition-all duration-300 w-14 h-14';
+  if (isMinimized) {
+    containerClasses += ' buddy-minimized';
+  }
+  
+  container.className = containerClasses;
+  
+  const getClampedPosition = (x, y) => {
+    const avatarWidth = 56;
+    const avatarHeight = 56;
+    const maxX = window.innerWidth - avatarWidth - 12;
+    const maxY = window.innerHeight - avatarHeight - 12;
+    return {
+      x: Math.max(12, Math.min(maxX, x)),
+      y: Math.max(12, Math.min(maxY, y))
+    };
+  };
+
+  let initialX, initialY;
+  if (savedPos && typeof savedPos.x === 'number' && typeof savedPos.y === 'number') {
+    const clamped = getClampedPosition(savedPos.x, savedPos.y);
+    initialX = clamped.x;
+    initialY = clamped.y;
+  } else {
+    // Default position at bottom-right
+    initialX = window.innerWidth - 56 - 24;
+    initialY = window.innerHeight - 56 - 24;
+  }
+  
+  container.style.left = `${initialX}px`;
+  container.style.top = `${initialY}px`;
   
   // Calculate dynamic progression stats
   const prog = config.getProgression();
 
   container.innerHTML = `
     <!-- Speech Bubble -->
-    <div id="buddy-speech-bubble" class="hidden pointer-events-auto max-w-[240px] bg-white border border-surface-200 shadow-xl rounded-2xl p-3 mb-3 text-xs text-surface-800 relative transform scale-90 opacity-0 transition-all duration-300">
+    <div id="buddy-speech-bubble" class="hidden pointer-events-auto max-w-[240px] bg-white/95 border border-surface-200/50 shadow-xl rounded-2xl p-3 text-xs text-surface-880 relative transform scale-90 opacity-0 transition-all duration-300">
       <p id="buddy-speech-text" class="leading-relaxed font-semibold"></p>
       <!-- Arrow -->
-      <div class="absolute bottom-[-6px] right-6 w-3 h-3 bg-white border-r border-b border-surface-200 rotate-45"></div>
+      <div id="buddy-speech-arrow" class="absolute w-3 h-3 bg-white border-rotate rotate-45"></div>
     </div>
 
     <!-- Floating Avatar Icon -->
-    <button id="buddy-avatar-btn" class="pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-lg border-2 cursor-pointer hover:scale-110 active:scale-95 transition-all duration-300 relative select-none buddy-floating-anim ${config.btnClass}">
+    <button id="buddy-avatar-btn" title="Klik: Obrolan | Double Klik: Sembunyikan" class="pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center text-3xl shadow-lg border-2 cursor-grab active:cursor-grabbing hover:scale-110 active:scale-95 transition-all duration-300 relative select-none buddy-floating-anim ${config.btnClass}">
       <span id="buddy-emoji">${prog.emoji}</span>
       <!-- Status Badge -->
       <span id="buddy-status-indicator" class="absolute top-[-3px] right-[-3px] px-1.5 py-0.5 rounded-full border-2 border-white text-[8px] font-extrabold shadow-sm ${config.indicatorColor}">
@@ -199,9 +245,9 @@ const fetchBuddyResponse = async (userMessage, level) => {
     </button>
 
     <!-- Interactive Chat Window Console -->
-    <div id="buddy-chat-window" class="hidden pointer-events-auto w-[310px] sm:w-[350px] buddy-glass border border-surface-200 rounded-3xl shadow-2xl p-4 mt-3 flex flex-col max-h-[420px] transform translate-y-4 opacity-0 transition-all duration-300">
+    <div id="buddy-chat-window" class="hidden pointer-events-auto w-72 glass-panel rounded-2xl shadow-2xl p-4 flex flex-col max-h-[420px] transform translate-y-4 opacity-0 transition-all duration-300">
       <!-- Chat Header -->
-      <div class="flex items-center justify-between border-b border-surface-100 pb-3">
+      <div class="flex items-center justify-between border-b border-surface-100/50 pb-3">
         <div class="flex items-center gap-2.5">
           <span id="buddy-chat-avatar" class="text-3xl">${prog.emoji}</span>
           <div>
@@ -209,9 +255,15 @@ const fetchBuddyResponse = async (userMessage, level) => {
             <p id="buddy-chat-subtitle" class="text-[9px] text-surface-500 font-bold uppercase tracking-wider mt-0.5">${prog.label}</p>
           </div>
         </div>
-        <button id="close-buddy-chat" class="p-1 hover:bg-surface-100 text-surface-400 hover:text-surface-600 rounded-lg cursor-pointer transition-all active:scale-90">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
+        <div class="flex items-center gap-1.5">
+          <!-- Minimize Button -->
+          <button id="minimize-buddy-btn" title="Kecilkan Buddy" class="p-1 hover:bg-white/50 text-surface-400 hover:text-surface-600 rounded-lg cursor-pointer transition-all active:scale-90 border-none">
+            <i data-lucide="minus" class="w-4 h-4"></i>
+          </button>
+          <button id="close-buddy-chat" title="Tutup Chat" class="p-1 hover:bg-white/50 text-surface-400 hover:text-surface-600 rounded-lg cursor-pointer transition-all active:scale-90 border-none">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Dialogue Thread -->
@@ -220,16 +272,16 @@ const fetchBuddyResponse = async (userMessage, level) => {
       </div>
 
       <!-- User Input Interface -->
-      <div class="border-t border-surface-100 pt-3 flex gap-2">
+      <div class="border-t border-surface-100/50 pt-3 flex gap-2">
         <input 
           type="text" 
           id="buddy-chat-input" 
-          placeholder="Ketik pesan (tips, kuis, lelucon)..." 
-          class="w-full px-3.5 py-2 border border-surface-200 focus:border-accent-500 focus:ring-2 focus:ring-accent-100 rounded-xl text-xs outline-none transition-all"
+          placeholder="Ketik pesan..." 
+          class="w-full px-3.5 py-2 bg-white/60 border border-surface-200/50 focus:bg-white focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-full text-xs outline-none transition-all"
         />
         <button 
           id="send-buddy-msg" 
-          class="px-3.5 py-2 text-white font-bold rounded-xl text-xs shadow-md active:scale-95 transition-all cursor-pointer flex items-center justify-center ${eduLevel === 'sd' ? 'bg-sky-500 hover:bg-sky-600' : (eduLevel === 'kuliah' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-amber-500 hover:bg-amber-600')}"
+          class="px-3.5 py-2 text-white font-bold rounded-full text-xs shadow-md active:scale-95 transition-all cursor-pointer flex items-center justify-center border-none ${eduLevel === 'sd' ? 'bg-sky-500 hover:bg-sky-600' : (eduLevel === 'kuliah' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-amber-500 hover:bg-amber-600')}"
         >
           <i data-lucide="send" class="w-3.5 h-3.5"></i>
         </button>
@@ -245,16 +297,134 @@ const fetchBuddyResponse = async (userMessage, level) => {
   const speechText = document.getElementById('buddy-speech-text');
   const chatWindow = document.getElementById('buddy-chat-window');
   const closeChatBtn = document.getElementById('close-buddy-chat');
+  const minimizeBuddyBtn = document.getElementById('minimize-buddy-btn');
   const chatMessages = document.getElementById('buddy-chat-messages');
   const chatInput = document.getElementById('buddy-chat-input');
   const sendMsgBtn = document.getElementById('send-buddy-msg');
 
+  // Function to dynamically position floating elements (chat window & speech bubble) relative to container and viewport bounds
+  const updateFloatingElementsPosition = () => {
+    if (!chatWindow || !speechBubble) return;
+
+    const rect = container.getBoundingClientRect();
+    const x = rect.left;
+    const y = rect.top;
+
+    const chatW = 288;
+    const chatH = 360; // approximate height when open
+    const bubbleW = 240;
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+
+    // A. Position Chat Window
+    let chatStyle = {
+      position: 'absolute',
+      left: 'auto',
+      right: 'auto',
+      top: 'auto',
+      bottom: 'auto'
+    };
+
+    // Vertical placement for Chat Window
+    const spaceBelow = winH - (y + 56 + 12);
+    const spaceAbove = y - 12;
+
+    if (spaceBelow >= chatH || spaceBelow >= spaceAbove) {
+      chatStyle.top = '68px';
+    } else {
+      chatStyle.bottom = '68px';
+    }
+
+    // Horizontal placement for Chat Window
+    const centerLeft = x + 28 - (chatW / 2);
+    if (centerLeft < 12) {
+      chatStyle.left = `${Math.max(-x + 12, -28)}px`;
+    } else if (centerLeft + chatW > winW - 12) {
+      chatStyle.right = `${Math.max(x + 56 - (winW - 12), -28)}px`;
+    } else {
+      chatStyle.left = '-116px'; // Center aligned: (56 - 288) / 2 = -116
+    }
+
+    Object.assign(chatWindow.style, chatStyle);
+
+    // B. Position Speech Bubble
+    let bubbleStyle = {
+      position: 'absolute',
+      left: 'auto',
+      right: 'auto',
+      top: 'auto',
+      bottom: 'auto'
+    };
+    
+    const arrow = document.getElementById('buddy-speech-arrow');
+    const bubbleH = speechBubble.offsetHeight || 80;
+
+    // Vertical placement for Speech Bubble
+    if (y - 12 - bubbleH >= 12) {
+      bubbleStyle.bottom = '68px';
+      if (arrow) {
+        arrow.className = 'absolute bottom-[-6px] w-3 h-3 bg-white border-r border-b border-surface-200/50 rotate-45';
+      }
+    } else {
+      bubbleStyle.top = '68px';
+      if (arrow) {
+        arrow.className = 'absolute top-[-6px] w-3 h-3 bg-white border-l border-t border-surface-200/50 rotate-45';
+      }
+    }
+
+    // Horizontal placement for Speech Bubble
+    const bubbleCenterLeft = x + 28 - (bubbleW / 2);
+    if (bubbleCenterLeft < 12) {
+      bubbleStyle.left = `${-x + 12}px`;
+      if (arrow) {
+        const arrowLeft = Math.max(12, Math.min(bubbleW - 24, x + 16));
+        arrow.style.left = `${arrowLeft}px`;
+        arrow.style.right = 'auto';
+        arrow.style.transform = 'rotate(45deg)';
+      }
+    } else if (bubbleCenterLeft + bubbleW > winW - 12) {
+      bubbleStyle.right = `${x + 56 - (winW - 12)}px`;
+      if (arrow) {
+        const arrowRight = Math.max(12, Math.min(bubbleW - 24, winW - 12 - (x + 28)));
+        arrow.style.right = `${arrowRight}px`;
+        arrow.style.left = 'auto';
+        arrow.style.transform = 'rotate(45deg)';
+      }
+    } else {
+      bubbleStyle.left = '-92px'; // Center aligned: (56 - 240) / 2 = -92
+      if (arrow) {
+        arrow.style.left = '50%';
+        arrow.style.right = 'auto';
+        arrow.style.transform = 'translateX(-50%) rotate(45deg)';
+      }
+    }
+
+    Object.assign(speechBubble.style, bubbleStyle);
+  };
+
+  // Run initial positioning
+  setTimeout(updateFloatingElementsPosition, 50);
+
+  // Resize Listener
+  window.addEventListener('resize', () => {
+    const rect = container.getBoundingClientRect();
+    const clamped = getClampedPosition(rect.left, rect.top);
+    container.style.left = `${clamped.x}px`;
+    container.style.top = `${clamped.y}px`;
+    updateFloatingElementsPosition();
+  });
+
   // Trigger random greetings dynamically on idle intervals
   const showSpeechBubble = (text) => {
+    if (getState('buddy-minimized', false)) return;
     if (!speechBubble || !speechText || !chatWindow.classList.contains('hidden')) return;
     
     speechText.textContent = text;
     speechBubble.classList.remove('hidden');
+    
+    // Reposition before showing
+    updateFloatingElementsPosition();
+    
     setTimeout(() => {
       speechBubble.classList.remove('scale-90', 'opacity-0');
     }, 10);
@@ -274,7 +444,7 @@ const fetchBuddyResponse = async (userMessage, level) => {
     }, 300);
   };
 
-  // Launch initial random greeting after 3 seconds of page load
+  // Launch initial random greeting after 3.5 seconds of page load
   setTimeout(() => {
     const randomGreet = config.greetings[Math.floor(Math.random() * config.greetings.length)];
     showSpeechBubble(randomGreet);
@@ -288,11 +458,14 @@ const fetchBuddyResponse = async (userMessage, level) => {
 
   // 4. Panel Chat Transitions
   const openChat = () => {
+    if (getState('buddy-minimized', false)) return;
     hideSpeechBubble();
     if (!chatWindow) return;
     
     chatWindow.classList.remove('hidden');
-    avatarBtn.classList.remove('buddy-floating-anim'); // Stop float animation during chat to keep it stable
+    avatarBtn.classList.remove('buddy-floating-anim'); // Stop float animation during chat
+    
+    updateFloatingElementsPosition();
     
     setTimeout(() => {
       chatWindow.classList.remove('translate-y-4', 'opacity-0');
@@ -310,17 +483,140 @@ const fetchBuddyResponse = async (userMessage, level) => {
     chatWindow.classList.add('translate-y-4', 'opacity-0');
     setTimeout(() => {
       chatWindow.classList.add('hidden');
-      avatarBtn.classList.add('buddy-floating-anim');
+      if (!getState('buddy-minimized', false)) {
+        avatarBtn.classList.add('buddy-floating-anim');
+      }
     }, 300);
   };
 
-  avatarBtn.addEventListener('click', () => {
-    if (chatWindow.classList.contains('hidden')) {
-      openChat();
+  // Drag and Drop Logic with suppression of click event on drag
+  let isDragging = false;
+  let startX = 0, startY = 0;
+  let dragThreshold = 5; // Pixels
+  let totalMoved = 0;
+
+  const onStart = (e) => {
+    isDragging = true;
+    container.classList.add('buddy-dragged');
+    
+    // Clear transitions
+    container.style.transition = 'none';
+    
+    const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+    
+    const rect = container.getBoundingClientRect();
+    
+    // Offset from cursor to left-top corner of container
+    startX = clientX - rect.left;
+    startY = clientY - rect.top;
+    
+    totalMoved = 0;
+    
+    if (e.type === 'mousedown') {
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onEnd);
     } else {
-      closeChat();
+      document.addEventListener('touchmove', onMove, { passive: false });
+      document.addEventListener('touchend', onEnd);
+    }
+  };
+
+  const onMove = (e) => {
+    if (!isDragging) return;
+    
+    // Prevent default scrolling for touch devices
+    if (e.type === 'touchmove') e.preventDefault();
+    
+    const clientX = e.type.startsWith('touch') ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type.startsWith('touch') ? e.touches[0].clientY : e.clientY;
+    
+    // Calculate new position
+    let newX = clientX - startX;
+    let newY = clientY - startY;
+    
+    // Viewport constraints with 12px margin
+    const finalX = Math.max(12, Math.min(window.innerWidth - 56 - 12, newX));
+    const finalY = Math.max(12, Math.min(window.innerHeight - 56 - 12, newY));
+    
+    container.style.bottom = 'auto';
+    container.style.right = 'auto';
+    container.style.left = `${finalX}px`;
+    container.style.top = `${finalY}px`;
+    
+    totalMoved += 1; // Count movements to determine drag vs click
+    
+    // Update bubble and chat window positions dynamically during drag
+    updateFloatingElementsPosition();
+  };
+
+  const onEnd = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    container.classList.remove('buddy-dragged');
+    container.style.transition = '';
+    
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onEnd);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onEnd);
+    
+    // Save position to state
+    const rect = container.getBoundingClientRect();
+    setState('buddy-position', { x: rect.left, y: rect.top });
+  };
+
+  // Bind drag-and-drop triggers
+  avatarBtn.addEventListener('mousedown', onStart);
+  avatarBtn.addEventListener('touchstart', onStart, { passive: true });
+
+  // Handle click to toggle chat
+  avatarBtn.addEventListener('click', (e) => {
+    // If the widget was dragged, ignore click action
+    if (totalMoved > dragThreshold) {
+      e.preventDefault();
+      return;
+    }
+    
+    const minimized = getState('buddy-minimized', false);
+    if (minimized) {
+      // Restore from minimized
+      toggleMinimize(false);
+    } else {
+      if (chatWindow.classList.contains('hidden')) {
+        openChat();
+      } else {
+        closeChat();
+      }
     }
   });
+
+  // Toggle Minimized State
+  const toggleMinimize = (minimize) => {
+    setState('buddy-minimized', minimize);
+    if (minimize) {
+      container.classList.add('buddy-minimized');
+      avatarBtn.classList.remove('buddy-floating-anim');
+      closeChat();
+      hideSpeechBubble();
+    } else {
+      container.classList.remove('buddy-minimized');
+      avatarBtn.classList.add('buddy-floating-anim');
+      updateFloatingElementsPosition();
+    }
+  };
+
+  // Double click on avatar toggles minimized
+  avatarBtn.addEventListener('dblclick', () => {
+    const current = getState('buddy-minimized', false);
+    toggleMinimize(!current);
+  });
+
+  if (minimizeBuddyBtn) {
+    minimizeBuddyBtn.addEventListener('click', () => {
+      toggleMinimize(true);
+    });
+  }
 
   if (closeChatBtn) closeChatBtn.addEventListener('click', closeChat);
 
@@ -332,15 +628,14 @@ const fetchBuddyResponse = async (userMessage, level) => {
     const alignClass = isBot ? 'justify-start' : 'justify-end';
     const bubbleCorners = isBot ? 'rounded-2xl rounded-tl-none' : 'rounded-2xl rounded-tr-none';
     
-    let msgBg = 'bg-surface-100 text-surface-800 border-surface-200/60';
+    let msgBg = '';
     if (!isBot) {
-      msgBg = eduLevel === 'sd' 
-        ? 'bg-gradient-to-tr from-sky-400 to-blue-500 text-white border-transparent shadow-sky-100' 
-        : (eduLevel === 'kuliah' ? 'bg-gradient-to-tr from-indigo-500 to-violet-600 text-white border-transparent shadow-indigo-100' : 'bg-gradient-to-tr from-amber-500 to-amber-600 text-white border-transparent shadow-amber-100');
+      msgBg = 'bg-accent text-white border-transparent ' + 
+        (eduLevel === 'sd' 
+          ? 'bg-gradient-to-tr from-sky-400 to-blue-500' 
+          : (eduLevel === 'kuliah' ? 'bg-gradient-to-tr from-indigo-500 to-violet-600' : 'bg-gradient-to-tr from-amber-500 to-amber-600'));
     } else {
-      if (eduLevel === 'sd') msgBg = 'bg-sky-50/90 text-sky-950 border-sky-100/60';
-      if (eduLevel === 'kuliah') msgBg = 'bg-indigo-50/90 text-indigo-950 border-indigo-100/60';
-      if (eduLevel === 'smk') msgBg = 'bg-amber-50/90 text-amber-950 border-amber-100/60';
+      msgBg = 'bg-gray-100 text-surface-800 border-surface-200/50';
     }
 
     const messageHTML = `

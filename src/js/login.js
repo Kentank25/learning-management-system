@@ -1,3 +1,5 @@
+import { setState } from './store.js';
+
 document.addEventListener('DOMContentLoaded', () => {
   const cards = document.querySelectorAll('.level-card');
   const submitBtn = document.getElementById('submit-btn');
@@ -59,9 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
-      // Store in localStorage
-      localStorage.setItem('edu-level', selectedLevel);
-      localStorage.setItem('username', document.getElementById('username').value);
+      // Store in centralized state
+      setState('edu-level', selectedLevel);
+      setState('username', document.getElementById('username').value);
 
       // Redirect to Dashboard
       window.location.href = 'index.html';

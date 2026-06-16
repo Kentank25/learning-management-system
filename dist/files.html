@@ -5,34 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>File Pribadi - SekolahMu</title>
 
-    <!-- Google Fonts: Inter -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
 
     <!-- Tailwind CSS -->
-    <script type="module" crossorigin src="/assets/files-CCcu2zQK.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/css-Cl0y6LQG.js">
-    <link rel="modulepreload" crossorigin href="/assets/buddy-vJ5S9m2q.js">
-    <link rel="stylesheet" crossorigin href="/assets/css-B4L9_Xu5.css">
-  </head>
-  <body
-    class="bg-surface-50 text-surface-900 font-sans antialiased h-screen flex overflow-hidden"
-  >
+
+    <!-- Theme Selector Script -->
     <script>
       (function() {
-        const level = localStorage.getItem('edu-level');
-        document.body.classList.remove('theme-sd', 'theme-kuliah');
-        if (level === 'sd') document.body.classList.add('theme-sd');
-        else if (level === 'kuliah') document.body.classList.add('theme-kuliah');
+        const state = JSON.parse(localStorage.getItem('sekolahmu_state') || '{}');
+        const theme = state['edu-level'] || localStorage.getItem('edu-level') || 'smk';
+        document.documentElement.setAttribute('data-theme', theme);
       })();
     </script>
-    <!-- Glowing Background Blobs -->
-    <div class="fixed -top-40 -left-40 w-[500px] h-[500px] rounded-full blur-[120px] opacity-20 -z-20 bg-accent-300 transition-colors duration-1000 pointer-events-none"></div>
-    <div class="fixed -bottom-40 -right-40 w-[500px] h-[500px] rounded-full blur-[120px] opacity-25 -z-20 bg-primary-300 transition-colors duration-1000 pointer-events-none"></div>
+    <script type="module" crossorigin src="/assets/files-C4As9x2X.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/store-5R8oxc92.js">
+    <link rel="modulepreload" crossorigin href="/assets/buddy-CvtKqBNh.js">
+    <link rel="stylesheet" crossorigin href="/assets/store-D7cHBOnK.css">
+  </head>
+  <body
+    class="bg-surface-50 text-surface-900 font-sans antialiased h-screen flex overflow-hidden relative"
+  >
+    <!-- Background dynamic mesh blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
 
     <!-- Sidebar Overlay -->
     <div
@@ -43,200 +44,16 @@
     <!-- Sidebar (Moodle-like Navigation) -->
     <aside
       id="sidebar"
-      class="w-64 bg-white/70 backdrop-blur-xl border-r border-white/40 flex flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-all duration-300 z-30 shadow-xl"
-    >
-      <!-- Logo Area -->
-      <div class="h-16 flex items-center px-6 border-b border-surface-200">
-        <div
-          class="flex items-center gap-2 text-accent-600 font-bold text-xl tracking-tight"
-        >
-          <i data-lucide="graduation-cap" class="w-6 h-6"></i>
-          <span>Sekolah<span class="text-surface-900">Mu</span></span>
-        </div>
-      </div>
-
-      <!-- Navigation Links -->
-      <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-        <a
-          href="index.html"
-          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors"
-        >
-          <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-          <span id="nav-dashboard-text">Dashboard</span>
-        </a>
-        <a
-          href="courses.html"
-          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors"
-        >
-          <i data-lucide="book-open" class="w-5 h-5"></i>
-          <span id="nav-courses-text">Mata Pelajaran</span>
-        </a>
-        <a
-          href="calendar.html"
-          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors hide-sd"
-        >
-          <i data-lucide="calendar" class="w-5 h-5"></i>
-          <span id="nav-calendar-text">Kalender</span>
-        </a>
-        <a
-          href="grades.html"
-          class="flex items-center gap-3 px-3 py-2.5 text-surface-600 hover:bg-surface-100 hover:text-surface-900 rounded-lg font-medium transition-colors"
-        >
-          <i data-lucide="award" class="w-5 h-5"></i>
-          <span id="nav-grades-text">Nilai & Rapor</span>
-        </a>
-        <!-- Active Link for Files -->
-        <a
-          href="files.html"
-          class="flex items-center gap-3 px-3 py-2.5 bg-accent-50 text-accent-600 rounded-lg font-semibold transition-colors sidebar-active-indicator hide-sd"
-        >
-          <i data-lucide="folder" class="w-5 h-5"></i>
-          <span id="nav-files-text">File Pribadi</span>
-        </a>
-      </nav>
-
-      <!-- Bottom User Actions -->
-      <div class="p-4 border-t border-surface-200">
-        <a
-          href="#"
-          id="logout-btn"
-          class="flex items-center gap-3 px-3 py-2 text-surface-600 hover:text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors"
-        >
-          <i data-lucide="log-out" class="w-5 h-5"></i>
-          Keluar
-        </a>
-      </div>
-    </aside>
+      class="w-64 glass-panel border-r border-white/30 flex flex-col fixed inset-y-0 left-0 transform -translate-x-full md:relative md:translate-x-0 transition-all duration-300 z-30 shadow-xl"
+    ></aside>
 
     <!-- Main Wrapper -->
-    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative z-10">
       <!-- Header / Topbar -->
       <header
-        class="h-16 bg-white/70 backdrop-blur-md border-b border-white/40 flex items-center justify-between px-4 sm:px-6 z-30 shadow-sm relative"
-      >
-        <div class="flex items-center gap-4">
-          <button
-            id="mobile-menu-btn"
-            class="p-2 text-surface-500 hover:bg-surface-100 rounded-lg md:hidden transition-colors"
-          >
-            <i data-lucide="menu" class="w-5 h-5"></i>
-          </button>
-          <!-- Search Bar -->
-          <div class="hidden sm:flex items-center relative hide-sd">
-            <i
-              data-lucide="search"
-              class="w-4 h-4 absolute left-3 text-surface-400"
-            ></i>
-            <input
-              type="text"
-              placeholder="Cari materi, tugas, atau kelas..."
-              class="pl-9 pr-4 py-2 w-64 md:w-80 bg-surface-100 border-transparent focus:bg-white focus:border-accent-500 focus:ring-2 focus:ring-accent-200 rounded-full text-sm outline-none transition-all"
-            />
-          </div>
-        </div>
-
-        <!-- Header Right: Notifications & Profile -->
-        <div class="flex items-center gap-3">
-          <!-- Notification Bell Wrapper -->
-          <div class="relative">
-            <button
-              id="notification-btn"
-              class="relative p-2 text-surface-500 hover:bg-surface-100 rounded-full transition-colors cursor-pointer"
-            >
-              <i data-lucide="bell" class="w-5 h-5"></i>
-              <span
-                id="notification-badge"
-                class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white animate-pulse"
-              ></span>
-            </button>
-            
-            <!-- Notification Dropdown Panel -->
-            <div
-              id="notification-dropdown"
-              class="hidden absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 max-w-sm bg-white/90 backdrop-blur-xl border border-white/60 rounded-2xl shadow-2xl p-4 z-50 text-sm space-y-3 animate-fade-in"
-            >
-              <div class="flex items-center justify-between border-b border-surface-100 pb-2">
-                <h4 class="font-bold text-surface-900">Pemberitahuan</h4>
-                <button id="mark-all-read" class="text-xs text-accent-600 hover:text-accent-700 font-semibold cursor-pointer">Tandai semua dibaca</button>
-              </div>
-              <div id="notification-list" class="space-y-2.5 max-h-[220px] overflow-y-auto pr-1">
-                <!-- Notifications dynamically rendered by main.js -->
-              </div>
-            </div>
-          </div>
-
-          <button
-            class="relative p-2 text-surface-500 hover:bg-surface-100 rounded-full transition-colors hide-sd cursor-pointer"
-          >
-            <i data-lucide="message-square" class="w-5 h-5"></i>
-          </button>
-          
-          <div class="h-8 w-px bg-surface-200 mx-1"></div>
-          
-          <!-- Profile Wrapper -->
-          <div class="relative">
-            <button
-              id="profile-menu-btn"
-              class="flex items-center gap-2 p-1 pl-2 hover:bg-surface-100 rounded-full transition-colors cursor-pointer"
-            >
-              <span id="profile-name" class="text-sm font-medium text-surface-700 hidden sm:block"
-                >Keane</span
-              >
-              <img
-                id="profile-img"
-                src="https://ui-avatars.com/api/?name=Keane&background=dbeafe&color=2563eb"
-                alt="Profile"
-                class="w-8 h-8 rounded-full border border-surface-200"
-              />
-              <i data-lucide="chevron-down" class="w-4 h-4 text-surface-500"></i>
-            </button>
-            
-            <!-- Profile Dropdown Menu -->
-            <div
-              id="profile-dropdown"
-              class="hidden absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-56 bg-white/90 backdrop-blur-xl border border-white/60 rounded-2xl shadow-2xl p-2 z-50 text-sm space-y-1 animate-fade-in"
-            >
-              <div class="px-3 py-2 border-b border-surface-100">
-                <span class="font-bold text-surface-900 block" id="dropdown-username">Keane</span>
-                <span class="text-[10px] uppercase tracking-wider font-extrabold text-surface-400 block mt-0.5" id="dropdown-role">Siswa SMK RPL</span>
-              </div>
-              <div class="py-1">
-                <span class="px-3 py-1.5 text-xs font-bold text-surface-400 block">Ganti Jenjang</span>
-                <button
-                  type="button"
-                  data-change-level="sd"
-                  class="w-full flex items-center gap-2 px-3 py-2 text-surface-700 hover:bg-sky-50 hover:text-sky-600 rounded-lg font-medium text-left transition-colors cursor-pointer border-none"
-                >
-                  <i data-lucide="smile" class="w-4.5 h-4.5 text-sky-500"></i> Sekolah Dasar (SD)
-                </button>
-                <button
-                  type="button"
-                  data-change-level="smk"
-                  class="w-full flex items-center gap-2 px-3 py-2 text-surface-700 hover:bg-amber-50 hover:text-amber-600 rounded-lg font-medium text-left transition-colors cursor-pointer border-none"
-                >
-                  <i data-lucide="book-open" class="w-4.5 h-4.5 text-amber-500"></i> SMP / SMA / K
-                </button>
-                <button
-                  type="button"
-                  data-change-level="kuliah"
-                  class="w-full flex items-center gap-2 px-3 py-2 text-surface-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-left transition-colors cursor-pointer border-none"
-                >
-                  <i data-lucide="graduation-cap" class="w-4.5 h-4.5 text-indigo-500"></i> Perguruan Tinggi
-                </button>
-              </div>
-              <div class="border-t border-surface-100 pt-1 mt-1">
-                <a
-                  href="#"
-                  id="dropdown-logout-btn"
-                  class="flex items-center gap-2 px-3 py-2 text-surface-600 hover:text-red-600 hover:bg-red-50 rounded-lg font-medium transition-colors"
-                >
-                  <i data-lucide="log-out" class="w-4 h-4"></i> Keluar
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+        id="header"
+        class="h-16 glass-panel border-b border-white/30 flex items-center justify-between px-4 sm:px-6 z-35 shadow-sm relative"
+      ></header>
 
       <!-- Main Content Scrollable Area: Files Panel -->
       <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
@@ -245,7 +62,7 @@
           <!-- Page Header -->
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 id="files-page-title" class="text-2xl font-bold text-surface-900">
+              <h1 id="files-page-title" class="text-2xl font-bold text-surface-900 font-display">
                 Penyimpanan File Pribadi
               </h1>
               <p id="files-page-desc" class="text-surface-500 text-sm mt-1">
@@ -257,7 +74,7 @@
             <div>
               <button
                 id="upload-file-trigger"
-                class="px-4 py-2 text-white font-semibold rounded-xl text-sm shadow-md active:scale-98 transition-all flex items-center gap-2 cursor-pointer"
+                class="px-4 py-3 bg-accent-500 hover:bg-accent-600 text-white font-bold rounded-xl text-sm shadow-md shadow-accent-500/10 hover:shadow-accent-500/20 active:scale-98 transition-all flex items-center gap-2 cursor-pointer border-none"
               >
                 <i data-lucide="upload" class="w-4 h-4"></i>
                 <span>Unggah Berkas Baru</span>
