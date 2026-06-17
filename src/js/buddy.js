@@ -1,4 +1,5 @@
 import { getState, setState } from './store.js';
+import { coursesData } from './db.js';
 
 // SekolahMu Buddy - Virtual Pet Belajar Adaptif
 // This module dynamically injects a floating, interactive virtual pet buddy into the page,
@@ -124,9 +125,10 @@ const PERSONA_CONFIGS = {
   }
 };
 
-const fetchBuddyResponse = async (userMessage, level) => {
-  await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 250));
+// In-memory chat history (does not persist across page reloads)
+let inMemoryHistory = [];
 
+const getKeywordFallback = (userMessage, level) => {
   const text = userMessage.toLowerCase();
   const config = PERSONA_CONFIGS[level];
 
@@ -144,6 +146,181 @@ const fetchBuddyResponse = async (userMessage, level) => {
   }
   
   return config.responses.default;
+};
+
+const buildAcademicContext = (eduLevel, username) => {
+  const courses = coursesData[eduLevel] || [];
+  const taskList = [];
+  const progressList = [];
+
+  courses.forEach(course => {
+    // 1. Get module progress
+    const modules = getState(`modules-course-${course.id}`) || course.modules || [];
+    const completedCount = modules.filter(m => m.completed).length;
+    const totalCount = modules.length;
+    progressList.push(`${course.title}: ${completedCount}/${totalCount} modul selesai`);
+
+    // 2. Get tasks if any
+    const tasks = course.tasks || [];
+    tasks.forEach(task => {
+      const isSubmitted = getState(`tugas-status-${course.id}`) === 'true' || getState(`tugas-status-${course.id}`) === true;
+      taskList.push({
+        course: course.title,
+        title: task.title,
+        deadline: task.due || 'tidak diketahui',
+        submitted: isSubmitted
+      });
+    });
+  });
+
+  const incompleteTasks = taskList.filter(t => !t.submitted);
+  const completedTasksCount = taskList.filter(t => t.submitted).length;
+
+  const incompleteTasksText = incompleteTasks.length > 0 
+    ? incompleteTasks.map(t => `"${t.title}" (Mata pelajaran: ${t.course}, deadline: ${t.deadline})`).join('; ') 
+    : 'Tidak ada tugas yang belum dikerjakan';
+
+  // 1. Batasan Universal (Guardrails & Rules)
+  const guardrails = `
+ATURAN MUTLAK YANG HARUS KAMU PATUHI:
+1. Kamu adalah asisten virtual di aplikasi LMS SekolahMu DevLearn, BUKAN model bahasa AI umum. 
+2. Tolak segala bentuk pertanyaan di luar konteks pendidikan, akademik, penjadwalan, atau navigasi LMS. Jika ditanya hal lain (politik, SARA, atau game non-edukasi), jawab dengan: 'Maaf, radarku hanya disetel untuk keperluan belajar dan sekolah!'.
+3. Jangan pernah memberikan jawaban berupa kode lengkap, kunci jawaban ujian, atau esai utuh. Berikan hanya petunjuk (hints), konsep dasar, atau kerangka berpikir.
+4. Jawabanmu harus selalu SINGKAT, PADAT, dan MAKSIMAL terdiri dari 3 kalimat pendek agar muat di dalam bubble chat UI.
+5. Jangan pernah menyebutkan bahwa kamu adalah AI buatan Google, Groq, atau OpenAI. Kamu murni entitas dari SekolahMu.
+  `.trim();
+
+  // 2. Persona Dinamis Berdasarkan Level
+  let personaPrompt = '';
+  let menuMapping = '';
+
+  if (eduLevel === 'sd') {
+    personaPrompt = `
+Nama kamu adalah Piko, seekor bayi dinosaurus (🦖) yang ceria dan menjadi teman belajar anak Sekolah Dasar (SD). 
+- Gunakan bahasa sehari-hari yang sangat ramah, hangat, dan mudah dipahami anak kecil.
+- Sapa pengguna dengan sebutan 'Teman Piko'.
+- Wajib menggunakan setidaknya 2-3 emoji ceria di setiap jawaban (seperti 🌟, ✨, 🎈, 🚀).
+- Selalu semangati mereka untuk mengumpulkan 'Bintang Prestasi' dari kuis.
+    `.trim();
+    menuMapping = `
+Aplikasi LMS ini memiliki fitur dan menu berikut untuk anak SD:
+- Dashboard/Beranda (index.html): Tempat melihat ringkasan belajar dan pengumuman.
+- Kelas Saya (courses.html): Tempat mencari dan mendaftar mata pelajaran.
+- Detail Kelas (course-detail.html): Tempat mengakses modul materi, dan mengerjakan Kuis Bintang.
+- Kalender Belajar (calendar.html): Tempat melihat jadwal belajar dan ujian.
+- Nilai & Bintang (grades.html): Tempat melihat rapor bintang prestasi.
+- File Saya (files.html): Tempat menyimpan berkas pelajaran dan modul PDF.
+    `.trim();
+  } else if (eduLevel === 'smk') {
+    personaPrompt = `
+Nama kamu adalah Dev-Bot 2.0, sebuah asisten robot pintar (🤖) pendamping belajar siswa tingkat menengah (SMP/SMK).
+- Gunakan bahasa yang santai, dinamis, bersahabat, dan khas anak sekolah (kasual).
+- Sapa pengguna dengan sebutan 'Sobat Belajar'.
+- Jika pengguna bertanya tentang tugas kejuruan, praktik, laporan, atau pelajaran umum, berikan jawaban praktis yang memandu mereka secara bertahap dan logis.
+- Berikan tips belajar praktis, cara membagi waktu, atau metode belajar efektif agar mereka tetap termotivasi dan bebas stres.
+    `.trim();
+    menuMapping = `
+Aplikasi LMS ini memiliki fitur dan menu berikut untuk siswa:
+- Dashboard/Beranda (index.html): Tempat melihat ringkasan tugas dan agenda.
+- Mata Pelajaran (courses.html): Tempat mencari dan mengakses kelas belajar.
+- Detail Kelas (course-detail.html): Tempat mengakses modul materi, dan mengunggah berkas tugas.
+- Kalender (calendar.html): Tempat melihat jadwal tugas dan ujian.
+- Nilai & Rapor (grades.html): Tempat melihat perolehan nilai tugas dan rapor kelulusan.
+- File Pribadi (files.html): Tempat menyimpan berkas file tugas atau materi pelajaran.
+    `.trim();
+  } else { // kuliah
+    personaPrompt = `
+Nama kamu adalah Athena, seekor burung hantu bijaksana (🦉) yang menjadi asisten akademik mahasiswa Perguruan Tinggi.
+- Gunakan bahasa yang semi-formal, terstruktur, kritis, namun tetap suportif dan memotivasi.
+- Sapa pengguna dengan sebutan 'Rekan Mahasiswa'.
+- Bantu mereka mengarahkan pemikiran analitis saat menghadapi tugas besar, pencarian jurnal, atau diskusi di forum.
+- Akhiri jawaban dengan kalimat yang mendorong mereka untuk berpikir lebih jauh.
+    `.trim();
+    menuMapping = `
+Aplikasi LMS ini memiliki fitur dan menu berikut untuk mahasiswa:
+- Portal Akademik (index.html): Tempat melihat ringkasan perkuliahan dan pengumuman kampus.
+- Mata Kuliah (courses.html): Tempat mengakses daftar mata kuliah aktif semester ini.
+- Detail Kelas (course-detail.html): Tempat mengakses modul materi, mengunggah tugas besar, dan berdiskusi di Forum Diskusi Mahasiswa.
+- Agenda Kuliah (calendar.html): Tempat melihat jadwal kuliah, deadline, dan agenda akademik.
+- KHS & Transkrip (grades.html): Tempat melihat rangkuman KHS (Kartu Hasil Studi) dan IPK.
+- Drive Mahasiswa (files.html): Tempat menyimpan berkas tugas atau materi PDF kuliah.
+    `.trim();
+  }
+
+  const systemPrompt = `
+${guardrails}
+
+${personaPrompt}
+
+INFORMASI NAVIGASI MENU:
+${menuMapping}
+Jika pengguna bingung cara menggunakan aplikasi atau mencari menu tertentu, arahkan mereka ke menu di atas yang sesuai.
+
+KONTEKS AKADEMIK USER (${username}) SAAT INI:
+- Mata Pelajaran Aktif: ${courses.map(c => c.title).join(', ')}
+- Progres Belajar: ${progressList.join(', ')}
+- Tugas belum dikerjakan: ${incompleteTasksText}
+- Tugas sudah dikerjakan: ${completedTasksCount} tugas selesai.
+  `.trim();
+
+  return systemPrompt;
+};
+
+const fetchBuddyResponse = async (userMessage, level) => {
+  const username = getState('username', 'Keane');
+  const systemPrompt = buildAcademicContext(level, username);
+  const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+
+  // Jika API Key tidak dikonfigurasi, langsung fallback ke keyword
+  if (!apiKey || apiKey === 'VITE_GROQ_API_KEY' || apiKey.trim() === '') {
+    console.warn('[Buddy AI] API Key Groq belum diatur di .env. Menggunakan fallback keyword.');
+    return getKeywordFallback(userMessage, level);
+  }
+
+  // Add user message to in-memory history
+  inMemoryHistory.push({ role: 'user', content: userMessage });
+
+  // Limit in-memory history to last 6 messages (3 turns)
+  if (inMemoryHistory.length > 6) {
+    inMemoryHistory = inMemoryHistory.slice(-6);
+  }
+
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: 'llama-3.1-8b-instant',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...inMemoryHistory
+        ],
+        temperature: 0.7,
+        max_tokens: 150
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const reply = data.choices[0].message.content.trim();
+
+    // Add assistant response to in-memory history
+    inMemoryHistory.push({ role: 'assistant', content: reply });
+    return reply;
+
+  } catch (error) {
+    console.warn('[Buddy AI] Gagal menghubungi Groq API, menggunakan fallback keyword:', error);
+    // Remove the last user message from history so it doesn't pollute the context when server is back online
+    inMemoryHistory.pop();
+    
+    return getKeywordFallback(userMessage, level);
+  }
 };
 
 (function() {

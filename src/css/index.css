@@ -296,3 +296,9 @@ header {
 .bg-gradient-default {
   background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%) !important;
 }
+
+/* Calendar cell consistent sizing */
+#calendar-grid button {
+  min-width: 0;
+  min-height: 0;
+}

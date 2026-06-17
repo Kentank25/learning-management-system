@@ -156,7 +156,7 @@ import { getState, setState } from './store.js';
       const dateStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(dateNum).padStart(2, '0')}`;
       
       const dayEl = document.createElement('button');
-      dayEl.className = 'h-14 sm:h-16 bg-surface-50 border border-surface-100 rounded-xl text-surface-300 text-xs font-semibold p-1 cursor-default opacity-50 flex flex-col justify-between items-start';
+      dayEl.className = 'aspect-square bg-surface-50 border border-surface-100 rounded-lg text-surface-300 text-[10px] sm:text-xs font-semibold p-1 cursor-default opacity-50 flex flex-col justify-between items-start overflow-hidden relative';
       dayEl.innerHTML = `<span>${dateNum}</span>`;
       calendarGrid.appendChild(dayEl);
     }
@@ -168,7 +168,7 @@ import { getState, setState } from './store.js';
       const isSelected = dateStr === selectedDateStr;
 
       // Class mapping based on edu theme
-      let dayBtnClass = 'h-14 sm:h-16 border rounded-xl text-sm font-semibold p-1.5 transition-all flex flex-col justify-between items-start cursor-pointer ';
+      let dayBtnClass = 'aspect-square border rounded-lg text-xs font-semibold p-1 transition-all flex flex-col justify-between items-start cursor-pointer overflow-hidden relative ';
       
       if (isSelected) {
         if (eduLevel === 'sd') {
@@ -189,14 +189,16 @@ import { getState, setState } from './store.js';
       // Render dots for agendas on this day
       let dotsHTML = '';
       if (dayAgendas.length > 0) {
-        dotsHTML = `<div class="flex gap-1.5 mt-auto">`;
-        dayAgendas.forEach(ag => {
+        // Limit to max 3 dots to prevent overflow/crowding
+        const visibleAgendas = dayAgendas.slice(0, 3);
+        dotsHTML = `<div class="flex gap-1 absolute bottom-1.5 left-1/2 -translate-x-1/2 justify-center">`;
+        visibleAgendas.forEach(ag => {
           let dotColor = 'bg-emerald-500'; // class
           if (ag.type === 'deadline') dotColor = 'bg-orange-500';
           if (ag.type === 'event') dotColor = 'bg-indigo-500';
           
           if (isSelected) dotColor = 'bg-white'; // White dots on selected day
-          dotsHTML += `<span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span>`;
+          dotsHTML += `<span class="w-1 h-1 rounded-full ${dotColor}"></span>`;
         });
         dotsHTML += `</div>`;
       }
@@ -222,7 +224,7 @@ import { getState, setState } from './store.js';
       const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
       
       const dayEl = document.createElement('button');
-      dayEl.className = 'h-14 sm:h-16 bg-surface-50 border border-surface-100 rounded-xl text-surface-300 text-xs font-semibold p-1 cursor-default opacity-50 flex flex-col justify-between items-start';
+      dayEl.className = 'aspect-square bg-surface-50 border border-surface-100 rounded-lg text-surface-300 text-[10px] sm:text-xs font-semibold p-1 cursor-default opacity-50 flex flex-col justify-between items-start overflow-hidden relative';
       dayEl.innerHTML = `<span>${i}</span>`;
       calendarGrid.appendChild(dayEl);
     }
