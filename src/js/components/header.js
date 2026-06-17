@@ -110,30 +110,6 @@ export function renderHeader() {
             <span class="font-bold text-surface-900 block" id="dropdown-username">${username}</span>
             <span class="text-[10px] uppercase tracking-wider font-extrabold text-surface-400 block mt-0.5" id="dropdown-role">${roleName}</span>
           </div>
-          <div class="py-1">
-            <span class="px-3 py-1.5 text-xs font-bold text-surface-400 block">Ganti Jenjang</span>
-            <button
-              type="button"
-              data-change-level="sd"
-              class="w-full flex items-center gap-2 px-3 py-2 text-surface-700 hover:bg-sky-50 hover:text-sky-600 rounded-lg font-medium text-left transition-colors cursor-pointer border-none"
-            >
-              <i data-lucide="smile" class="w-4 h-4 text-sky-500"></i> Sekolah Dasar (SD)
-            </button>
-            <button
-              type="button"
-              data-change-level="smk"
-              class="w-full flex items-center gap-2 px-3 py-2 text-surface-700 hover:bg-amber-50 hover:text-amber-600 rounded-lg font-medium text-left transition-colors cursor-pointer border-none"
-            >
-              <i data-lucide="code" class="w-4 h-4 text-amber-500"></i> SMK (RPL)
-            </button>
-            <button
-              type="button"
-              data-change-level="kuliah"
-              class="w-full flex items-center gap-2 px-3 py-2 text-surface-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg font-medium text-left transition-colors cursor-pointer border-none"
-            >
-              <i data-lucide="book-open" class="w-4 h-4 text-indigo-500"></i> Perguruan Tinggi
-            </button>
-          </div>
           <div class="border-t border-surface-150 py-1">
             <a
               href="#"

@@ -1,4 +1,4 @@
-# Project Context: SekolahMu (LMS DevLearn) - Updated
+# Project Context: SekolahMu (LMS DevLearn) - Updated with Supabase & Groq Integration
 
 SekolahMu (LMS DevLearn) adalah prototipe aplikasi Learning Management System (LMS) berbasis web interaktif yang dirancang khusus untuk mendukung berbagai jenjang sekolah dengan desain modern, premium, responsif, serta adaptif terhadap tiga tingkat pendidikan yang berbeda: **Sekolah Dasar (SD)**, **Sekolah Menengah Kejuruan (SMK)**, dan **Perguruan Tinggi (Kuliah)**.
 
@@ -10,7 +10,9 @@ SekolahMu (LMS DevLearn) adalah prototipe aplikasi Learning Management System (L
 3.  **Typography:** Menggunakan Google Fonts *Plus Jakarta Sans* untuk teks umum (`var(--font-sans)`) dan *Outfit* untuk judul/header (`var(--font-display)`), diimpor langsung pada file CSS utama.
 4.  **Icons:** Lucide Icons SVG (di-render dinamis via script tag `unpkg.com/lucide@latest` dan diinisiasi lewat `lucide.createIcons()`).
 5.  **Build Tool:** Vite untuk server lokal (`npm run dev`) dan manajemen aset.
-6.  **Theme Dynamic & Adaptive Layout:**
+6.  **Backend & Database:** **Supabase (PostgreSQL)** untuk menggantikan penyimpanan statis `db.js` dan penyimpanan lokal `store.js`. Data disinkronisasikan secara real-time.
+7.  **AI Integration:** **Groq Cloud API** untuk mentenagai virtual chatbot SekolahMu Buddy dengan persona adaptif.
+8.  **Theme Dynamic & Adaptive Layout:**
     *   Variabel warna, tata letak, dan visibilitas diatur berdasarkan atribut `data-theme` pada elemen `<html>` (misal: `[data-theme="sd"]`, `[data-theme="kuliah"]`, dan default untuk SMK).
     *   Inisialisasi tema dilakukan melalui inline script di bagian `<head>` pada setiap file HTML untuk mencegah efek *Flash of Unstyled Content* (FOUC) sebelum halaman di-render sepenuhnya.
     *   Penanganan tema diatur secara terpusat dengan menetapkan atribut `data-theme` pada `document.documentElement` sehingga seluruh halaman langsung menyesuaikan variabel warna CSS secara efisien.
@@ -31,7 +33,8 @@ Aplikasi ini dirancang dengan standar UI modern kualitas premium yang dioptimalk
     *   Header / Topbar: `z-30`
     *   Dropdown menu: `z-40`
     *   SekolahMu Buddy Container: `z-50` (Sejajar dengan modal dan diposisikan paling atas untuk menghindari bug terpotong oleh komponen lain).
-*   **Universal Interactive Transition & Hover Effect:** Semua elemen interaktif (`a`, `button`, `select`, `input`, `.level-card`, `.course-card`) menerapkan transisi halus (`transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1)`) dan kartu utama memiliki efek `.hover-lift` (`translateY(-4px)` + bayangan melayang).
+*   **Universal Interactive Transition & Hover Effect:** Semua elemen interaktif (`a`, `button`, `select`, `input`, `.course-card`) menerapkan transisi halus (`transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1)`) dan kartu utama memiliki efek `.hover-lift` (`translateY(-4px)` + bayangan melayang).
+*   **Responsive Calendar Grid:** Grid tanggal kalender bulanan menggunakan utilitas `aspect-square` agar sel tanggal tetap persegi secara responsif tanpa tumpang tindih. Dot indikator kegiatan diposisikan secara absolut di bagian bawah sel dan dibatasi maksimal 3 dot untuk menghindari penumpukan visual.
 
 ---
 
@@ -39,107 +42,85 @@ Aplikasi ini dirancang dengan standar UI modern kualitas premium yang dioptimalk
 ```text
 learning-management-system/
 ├── index.html            # Dashboard / Beranda Siswa
-├── login.html            # Halaman Portal Masuk & Pemilih Jenjang (Ultra-Glassmorphic)
-├── courses.html          # Katalog Mata Pelajaran / Kuliah
-├── course-detail.html    # Halaman Detail Kursus & Pembelajaran
+├── login.html            # Halaman Portal Masuk dengan Autentikasi Email (Tanpa Pemilih Jenjang)
+├── courses.html          # Katalog Mata Pelajaran / Kuliah (Aktif & Riwayat Semester Sebelumnya)
+├── course-detail.html    # Halaman Detail Kursus, Progress Modul, & Forum Real-time
 ├── calendar.html         # Agenda & Kalender Kegiatan Interaktif
 ├── grades.html           # Rapor Nilai & Bento Grid Hasil Belajar
-├── files.html            # Penyimpanan File & Radial Progress Capacity
+├── files.html            # Penyimpanan File Cloud Drive Pribadi & Radial Progress Ring
+├── admin.html            # Halaman Admin Panel untuk Manajemen Peran & Jenjang
 ├── package.json          # Konfigurasi npm (scripts, dependencies)
 ├── vite.config.js        # Konfigurasi Vite & Tailwind CSS
+├── database.md           # Dokumentasi Migrasi & Skema Supabase Database
 ├── context/
 │   ├── context-old.md    # Context lama sebelum optimasi
 │   ├── context-new.md    # Context terbaru proyek (File ini)
-│   └── implementation-plan.md # Panduan langkah demi langkah refactoring & optimasi
+│   └── implementation_plan.md # Panduan langkah demi langkah refactoring & integrasi
 └── src/
     ├── css/
     │   └── index.css     # Base Tailwind, Font Google, Variabel Tema & Adaptive CSS
     └── js/
-        ├── store.js      # [NEW] Central State Management (getState/setState & Migrasi)
-        ├── components/   # [NEW] Folder Komponen Modular ES6
-        │   ├── sidebar.js # [NEW] Render Sidebar dinamis & penanda menu aktif otomatis
-        │   └── header.js  # [NEW] Render Header dinamis & dropdown user profile/notifikasi
-        ├── db.js         # Central Database (Mock Data untuk semua jenjang)
-        ├── main.js       # Logika Global (Inisiasi Komponen Modular, Lucide, Sidebar Mobile, Logout)
-        ├── login.js      # Logika login & interaktivitas level selector
-        ├── dashboard.js  # Handler data dinamis & welcome banner premium
-        ├── courses.js    # Handler grid kursus, filter tab, dan fitur pencarian
-        ├── course-detail.js # Handler modul, sistem kuis (SD), upload tugas (SMK/Kuliah), forum diskusi (Kuliah)
-        ├── calendar.js   # Pembuat kalender grid interaktif bulanan & formulir tambah kegiatan
-        ├── grades.js     # Bento grid pencapaian akademik & rapor bintang
-        ├── files.js      # Handler file cloud pribadi & radial progress ring storage
-        └── buddy.js      # SekolahMu Buddy (Virtual Pet pendamping belajar adaptif dengan Drag & Minimized)
+        ├── store.js      # Central State Management (getState/setState untuk sinkronisasi state UI lokal)
+        ├── supabaseClient.js # Inisialisasi Supabase Client dengan URL dan Anon Key
+        ├── components/   # Folder Komponen Modular ES6
+        │   ├── sidebar.js # Render Sidebar dinamis & penanda menu aktif otomatis
+        │   └── header.js  # Render Header dinamis (Menu Ganti Jenjang Dihapus)
+        ├── db.js         # Central Static Database (Data Riwayat Pelajaran Masa Lalu)
+        ├── main.js       # Logika Global (Inisiasi Komponen Modular, Sesi Supabase, Sidebar Mobile, Logout)
+        ├── login.js      # Logika login & signup Supabase Auth serta Deteksi Jenjang Bawaan dari Domain Email
+        ├── dashboard.js  # Handler data dinamis dasbor & welcome banner premium
+        ├── courses.js    # Handler grid kursus dari Supabase berdasarkan jenjang aktif
+        ├── course-detail.js # Handler detail kursus, progress modul, upload tugas, kuis confetti, & forum diskusi real-time (Realtime Channel)
+        ├── calendar.js   # Pembuat kalender bulanan responsif & sinkronisasi agenda pribadi/sistem ke database
+        ├── grades.js     # Bento grid pencapaian akademik dinamis
+        ├── files.js      # Handler unggah/unduh file Supabase Storage bucket 'user-documents' & Signed URL
+        ├── admin.js      # Handler untuk halaman Admin Panel (pencarian, filter, edit data real-time, toast)
+        └── buddy.js      # SekolahMu Buddy (Virtual Pet obrolan akademik Groq API dengan guardrails & metadata akademik terintegrasi)
 ```
 
 ---
 
-## 🌟 Tingkatan Pendidikan (Educational Levels)
-Perubahan jenjang pendidikan mengubah visual (warna aksen, ikon, ilustrasi) dan fungsionalitas (menu sidebar, jenis tugas, widget khusus).
+## 🌟 Jenjang Pendidikan, Peran & Manajemen Pembatasan
+Sesuai kesepakatan **Pendekatan 1**, pengguna tidak dapat lagi secara bebas memilih atau mengubah jenjang pendidikan mereka dari antarmuka login maupun profile dropdown. Perubahan jenjang pendidikan ditentukan sepenuhnya oleh Administrator melalui database Supabase (kolom `edu_level` pada tabel `public.profiles`).
 
-| Fitur | Sekolah Dasar (SD) | SMK (RPL) - Default | Perguruan Tinggi (Kuliah) |
-| :--- | :--- | :--- | :--- |
-| **Warna Aksen** | Biru Langit (`#0ea5e9` - Sky) | Amber / Soft Yellow (`#eab308` - Amber) | Indigo (`#6366f1` - Indigo) |
-| **Header / Menu** | Sederhana. Kolom pencarian, chat, kalender, dan file pribadi disembunyikan. | Lengkap dengan bilah pencarian & navigasi penuh. | Lengkap dengan bilah pencarian & navigasi penuh. |
-| **Widget Dashboard** | **Bintang Prestasi Saya 🌟**: Menampilkan pencapaian bintang mingguan. | Standar tugas mendatang. | **Pintasan Akademik 🌐**: Tautan cepat (E-Journal, Perpus, KRS, Layanan Dosen). |
-| **Indikator Progres** | Progress Belajar (Persentase) | Progress Belajar (Persentase) | **KHS & Transkrip**: Menampilkan IPK Semester (`3.85 / 4.00`) & beban SKS. |
-| **Sistem Detail Kelas** | Modul Ceria + Kuis Bintang (interaktif) | Modul & Materi + Dropbox Tugas | Silabus & Modul + Submisi Tugas + Forum Diskusi Mahasiswa |
-| **Virtual Buddy Persona**| **Piko (Dino 🦖)**: Tumbuh dari telur ke naga bijak berdasarkan jumlah bintang kuis. | **Dev-Bot 2.0 (Drone 🤖)**: Status baterai terisi berdasarkan persentase penyelesaian modul. | **Athena (Burung Hantu 🦉)**: Tingkatan level kebijaksanaan seiring progres modul selesai. |
+*   **Pola Pendaftaran Default (Domain Email Detection):** Saat pengguna baru mendaftar secara otomatis, sistem akan menganalisis domain email untuk memetakan tingkat pendidikan bawaan (contoh: `@sd.sekolahmu.sch.id` otomatis masuk jenjang `sd`, sedangkan domain umum/lainnya masuk jenjang `smk`).
+*   **Penghapusan Selector & Switcher:** Selektor kartu jenjang di halaman login, opsi "Ganti Jenjang" di dropdown profil, serta *event listener* beralih jenjang di Javascript telah dihapus sepenuhnya dari sisi klien.
+*   **Peran Administrator (Admin Role & Exclusive View):**
+    - **Kolom `is_admin`**: Tabel `profiles` dilengkapi dengan kolom `is_admin` (BOOLEAN) untuk mengidentifikasi peran administrator.
+    - **Tampilan Khusus Admin**: Akun administrator secara otomatis dialihkan (`redirect`) ke halaman `admin.html` sesaat setelah login. Mereka diblokir sepenuhnya dari mengakses halaman student biasa (seperti dashboard `index.html`, `courses.html`, dll).
+    - **Sidebar Khusus**: Menu sidebar untuk admin secara eksklusif hanya menampilkan tautan **"Admin Panel"** dan tombol **"Keluar"** (tanpa menu student lainnya).
+    - **Skema Warna Ungu Premium (`[data-theme="admin"]`)**: Admin memiliki tema warna visual ungu/violet aksen (`#a855f7`) eksklusif untuk panel kontrol mereka.
 
----
-
-## 💾 Manajemen State Terpusat (`src/js/store.js`)
-Aplikasi ini menggunakan sistem state management terpusat yang dibungkus dalam satu objek JSON `sekolahmu_state` di `localStorage`. Semua modul membaca dan menulis data melalui modul `store.js` menggunakan fungsi pembantu:
-*   `getState(key, defaultValue)`: Mengambil properti tertentu dari objek `sekolahmu_state`.
-*   `setState(key, value)`: Menyimpan properti ke dalam `sekolahmu_state` secara reaktif dan memicu event kustom `sekolahmu_state_change` agar modul lain bisa merespons perubahan secara reaktif.
-
-### Skema Data `sekolahmu_state`
-Semua data disimpan dalam satu objek dengan struktur sebagai berikut:
-*   `edu-level` : `'sd' | 'smk' | 'kuliah'` (jenjang aktif).
-*   `username` : Nama pengguna yang login.
-*   `progress-course-[id]` : Persentase kemajuan belajar per mata pelajaran.
-*   `kuis-stars-[id]` : Jumlah bintang kuis untuk siswa SD.
-*   `modules-course-[id]` : Status checklist penyelesaian sub-modul.
-*   `tugas-status-[id]` : Status pengumpulan berkas tugas (`true | false`).
-*   `forum-course-[id]` : Riwayat pesan obrolan di forum diskusi perkuliahan.
-*   `custom-agendas` : Array agenda kustom dari kalender.
-*   `personal-files-[level]` : Daftar file pribadi yang tersimpan di cloud drive.
-*   `buddy-position` : Posisi koordinat floating widget Buddy (`{ x, y }`).
-*   `buddy-minimized` : Status apakah floating widget Buddy sedang ciut/minimized (`true | false`).
-
-### Mekanisme Migrasi Legacy Data
-Saat pertama kali berjalan, `store.js` secara otomatis mendeteksi kunci-kunci `localStorage` terpisah yang dibuat oleh versi aplikasi terdahulu, memigrasikan nilainya ke objek terpadu `sekolahmu_state`, dan menghapus kunci lama untuk kebersihan penyimpanan data.
+| Fitur | Sekolah Dasar (SD) | Sekolah Menengah (SMK) - Default | Perguruan Tinggi (Kuliah) | Administrator (Admin Panel) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Warna Aksen** | Biru Langit (`#0ea5e9` - Sky) | Amber / Soft Yellow (`#eab308` - Amber) | Indigo (`#6366f1` - Indigo) | Ungu / Violet (`#a855f7` - Purple) |
+| **Header / Menu** | Sederhana. Kolom pencarian, chat, kalender, dan file pribadi disembunyikan. | Lengkap dengan bilah pencarian & navigasi penuh. | Lengkap dengan bilah pencarian & navigasi penuh. | Menu Tameng Admin Panel & Keluar (Logout) eksklusif. |
+| **Widget Dashboard** | **Bintang Prestasi Saya 🌟**: Menampilkan pencapaian bintang kuis mingguan. | Standar tugas mendatang. | **Pintasan Akademik 🌐**: Tautan cepat (E-Journal, Perpus, KRS, Layanan Dosen). | Panel kontrol pengguna (Pencarian & Filter Jenjang/Peran). |
+| **Indikator Progres** | Progress Belajar (Persentase) | Progress Belajar (Persentase) | **KHS & Transkrip**: Menampilkan IPK Semester (`3.85 / 4.00`) & beban SKS. | Manajemen dropdown `edu_level` dan toggle `is_admin` real-time. |
+| **Sistem Detail Kelas** | Modul Ceria + Kuis Bintang (confetti confetti-canvas) | Modul & Materi + Dropbox Tugas | Silabus & Modul + Submisi Tugas + Forum Diskusi Mahasiswa | - |
+| **Virtual Buddy Persona**| **Piko (Dino 🦖)**: Sapaan *"Teman Piko"*, ceria, evolusi visual berdasarkan total bintang kuis. | **Dev-Bot 2.0 (Robot 🤖)**: Sapaan *"Sobat Belajar"*, general (tidak RPL-spesifik), membagi waktu belajar dengan sehat. | **Athena (Burung Hantu 🦉)**: Sapaan *"Rekan Mahasiswa"*, semi-formal akademis. | - (Ditiadakan untuk tampilan bersih) |
 
 ---
 
-## 🧩 Modul Pendukung Khusus
+## 💾 Integrasi Database & Autentikasi Supabase
+Sistem SekolahMu LMS terhubung penuh ke cloud database **Supabase (PostgreSQL)** untuk penyimpanan data persisten dan real-time:
+1.  **Supabase Auth (Separate Login & SignUp Flows):** Autentikasi dipisah secara eksplisit antara alur masuk dan daftar baru. Di halaman portal (`login.html`), terdapat tautan toggle untuk beralih mode. 
+    *   **Login Mode:** Memanggil API `signInWithPassword`. Jika kata sandi atau email salah, mengembalikan pesan error dalam Bahasa Indonesia yang ramah tanpa mendaftarkan akun secara otomatis.
+    *   **SignUp Mode:** Memanggil API `signUp` dengan pendeteksian jenjang berbasis domain email dan pemetaan nama pengguna otomatis.
+2.  **Trigger Database (`on_auth_user_created`):** Trigger di database mengeksekusi fungsi PL/pgSQL `handle_new_user` untuk menyalin pengguna yang baru mendaftar di `auth.users` ke tabel `public.profiles` dengan pengaturan username yang rapi (kapitalisasi + penghapusan pemisah) dan penetapan jenjang otomatis. Fungsi ini dikonfigurasi secara aman menggunakan `SECURITY DEFINER SET search_path = public` untuk mencegah error skema.
+3.  **Tabel Relasional database:**
+    *   `profiles`: Data profil mahasiswa/siswa (id, username, edu_level, avatar_url).
+    *   `courses`: Data kelas akademis aktif serta kelas masa lalu (riwayat pelajaran).
+    *   `user_module_progress`: Menyimpan status checklist pengerjaan modul.
+    *   `forum_messages`: Obrolan diskusi mahasiswa perkuliahan yang disinkronisasi instan menggunakan *Supabase Realtime Channel Subscription*.
+    *   `calendar_agendas`: Agenda sistem (global sesuai jenjang) dan agenda personal (RLS terikat ke pemilik user).
+    *   `user_files`: Metadata penyimpanan cloud pribadi.
+4.  **Supabase Storage & Signed URL:** File pribadi yang diunggah dikirim langsung ke Supabase Storage bucket privat `user-documents` dengan jalur terenkripsi `${user_id}/${edu_level}/`. Tautan unduhan berkas digenerasi dinamis menggunakan Signed URL berdurasi kedaluwarsa 60 detik untuk menjamin keamanan berkas.
 
-### 1. Central Static Database (`src/js/db.js`)
-Menyediakan modul modular ekspor:
-*   `sidebarTexts`: Teks kustomisasi menu samping (misal: "Mata Pelajaran" untuk SMK vs "Mata Kuliah" untuk Kuliah vs "Kelas Saya" untuk SD).
-*   `coursesData`: Data struktural kelas, berisi judul, pengampu, deskripsi, daftar sub-modul materi, soal kuis bergambar (SD), target tugas (SMK/Kuliah).
+---
 
-### 2. SekolahMu Buddy (`src/js/buddy.js`)
-Sebuah floating widget Virtual Pet yang disuntikkan ke seluruh halaman (dengan `z-50` agar melayang di atas semua konten):
-*   **Animasi:** Efek melayang dinamis pada avatar lewat `@keyframes buddy-float` dan styling tombol avatar melingkar 56px (`w-14 h-14`).
-*   **Interaktivitas Drag-and-Drop:** Dilengkapi fitur *drag-and-drop* lancar (mouse & touch) dengan pendeteksian batas layar agar tidak melayang ke luar viewport. Posisi buddy disimpan di `sekolahmu_state` agar tetap konsisten ketika berpindah halaman.
-*   **Pencegah Klik Palsu:** Menerapkan toleransi gerakan 5px untuk membedakan antara aksi *drag* dan aksi *click* (membuka balon percakapan).
-*   **State "Minimized":** Dapat disusutkan menjadi ikon kepala kecil di pojok layar, status minimalisasi disimpan di `sekolahmu_state`.
-*   **Console Obrolan:** Panel chat bergaya `.glass-panel` (lebar `w-72`) dengan gelembung pesan asimetris. Balon pesan bot menggunakan `bg-gray-100 text-surface-800` sedangkan balon pesan user menggunakan `bg-accent` (gradient linear yang adaptif dengan tema jenjang aktif). Membalas kata kunci seperti `tips`, `tugas`, `bintang`/`level`, atau `lelucon` secara real-time.
-
-### 3. Modul Kuis Ceria (`src/js/course-detail.js` - SD Only)
-*   Menghitung jawaban benar-salah. Jika benar 100%, memicu trigger kembang api **Canvas Confetti** (`canvas-confetti` library), memberikan 10 Bintang Prestasi, dan memperbarui evolusi pet Piko.
-
-### 4. Modul Submisi Tugas (`src/js/course-detail.js` - SMK & Kuliah)
-*   Drag-and-drop zone mockup untuk upload file dengan progress bar upload dinamis dari 0% ke 100%.
-
-### 5. Modul Forum Diskusi Perkuliahan (`src/js/course-detail.js` - Kuliah Only)
-*   Chat room perkuliahan yang menampilkan komentar/instruksi dosen (ber-badge merah) dan mahasiswa (ber-badge indigo), tersinkronisasi ke `localStorage` (via `store.js`).
-
-### 6. Kalender Kegiatan (`src/js/calendar.js`)
-*   Menggambar grid tanggal bulanan dinamis dengan dot penanda kegiatan (hijau untuk kelas, orange untuk deadline, dan indigo untuk event) serta modal input kegiatan baru.
-
-### 7. Hasil Studi & Rapor (`src/js/grades.js`)
-*   Memvisualisasikan hasil belajar di ketiga jenjang menggunakan tata letak bento grid modern untuk statistik ringkasan akademik (IPK, SKS, Bintang Emas, status kompetensi) dan tabel evaluasi.
-
-### 8. Drive File Pribadi & Radial Progress (`src/js/files.js`)
-*   Handler berkas pribadi yang diintegrasikan dengan folder navigasi (Kuliah & SMK) serta visual kapasitas sisa memori menggunakan widget **Radial Progress Ring SVG** melingkar yang berpendar dinamis.
+## 🤖 Integrasi AI Groq Cloud API (`src/js/buddy.js`)
+Widget floating SekolahMu Buddy terintegrasi penuh dengan **Groq Cloud API** menggunakan kunci API dinamis di frontend:
+*   **Academic Context Injection:** Setiap permintaan obrolan secara dinamis menyuntikkan data akademis terbaru dari state aplikasi (daftar mata pelajaran aktif, modul yang sedang dikerjakan, detail tugas, dan tenggat waktu).
+*   **Navigation Guidance:** Chatbot memahami peta navigasi aplikasi (seperti tautan ke `grades.html` atau `calendar.html` sesuai nama menu jenjang aktif) sehingga bisa mengarahkan user dengan tepat.
+*   **Guardrails & Rules:** Membatasi AI untuk hanya merespons topik akademis, melarang pemberian jawaban kode penuh (hanya boleh kerangka dan petunjuk pemikiran), membatasi panjang respons maksimal 3 kalimat agar pas di UI gelembung obrolan, serta menyembunyikan identitas mesin aslinya (Athena/Dev-Bot/Piko).

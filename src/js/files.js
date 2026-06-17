@@ -1,7 +1,8 @@
 import { sidebarTexts } from './db.js';
-import { getState, setState } from './store.js';
+import { getState } from './store.js';
+import { supabase } from './supabaseClient.js';
 
-(function() {
+(async function() {
   const eduLevel = getState('edu-level', 'smk');
   const username = getState('username', 'Keane');
 
@@ -45,39 +46,32 @@ import { getState, setState } from './store.js';
     }
   }
 
-  // 3. Mock Database Files Initialization
-  const initialFiles = {
-    sd: [
-      { name: 'Piko Mewarnai Ceria.pdf', size: '1.2 MB', date: 'Baru saja', type: 'pdf' },
-      { name: 'Matematika Dasar - Penjumlahan.pdf', size: '850 KB', date: 'Kemarin', type: 'pdf' },
-      { name: 'Cerita Dongeng Kancil & Buaya.docx', size: '320 KB', date: '3 hari yang lalu', type: 'doc' }
-    ],
-    smk: [
-      { name: 'skema-database-toko-online.sql', size: '45 KB', date: 'Baru saja', type: 'code' },
-      { name: 'sertifikat-kompetensi-rpl.pdf', size: '2.4 MB', date: 'Kemarin', type: 'pdf' },
-      { name: 'Landing_Page_VueJS.zip', size: '8.1 MB', date: '2 hari yang lalu', type: 'archive' }
-    ],
-    kuliah: [
-      { name: 'draf-proposal-skripsi-v2.docx', size: '420 KB', date: '1 jam yang lalu', type: 'doc' },
-      { name: 'jurnal-penelitian-microservices.pdf', size: '3.6 MB', date: 'Kemarin', type: 'pdf' },
-      { name: 'ieee-journal-template.doc', size: '150 KB', date: '3 hari yang lalu', type: 'doc' }
-    ]
-  };
+  // Get active session
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = 'login.html';
+    return;
+  }
+  const userId = session.user.id;
 
-  const getFiles = () => {
-    const key = `personal-files-${eduLevel}`;
-    const raw = getState(key);
-    if (raw) return raw;
-    
-    // Save default mock files
-    setState(key, initialFiles[eduLevel]);
-    return initialFiles[eduLevel];
-  };
+  let files = [];
 
-  const saveFiles = (filesList) => {
-    const key = `personal-files-${eduLevel}`;
-    setState(key, filesList);
-    renderFiles();
+  // Fetch files from Supabase
+  const fetchFiles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_files')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('edu_level', eduLevel)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        files = data;
+      }
+    } catch (e) {
+      console.error('Failed to load files from Supabase:', e);
+    }
   };
 
   const contentArea = document.getElementById('files-content-area');
@@ -85,8 +79,6 @@ import { getState, setState } from './store.js';
   const renderFiles = () => {
     if (!contentArea) return;
     contentArea.innerHTML = '';
-
-    const files = getFiles();
 
     // Helper file icon renderer
     const getFileIcon = (type) => {
@@ -100,12 +92,7 @@ import { getState, setState } from './store.js';
     const iconAccent = eduLevel === 'sd' ? 'text-sky-500' : (eduLevel === 'kuliah' ? 'text-indigo-600' : 'text-amber-500');
 
     // Calculate capacity
-    let totalBytes = 0;
-    files.forEach(f => {
-      let sizeNum = parseFloat(f.size);
-      if (f.size.includes('KB')) totalBytes += sizeNum * 1024;
-      if (f.size.includes('MB')) totalBytes += sizeNum * 1024 * 1024;
-    });
+    const totalBytes = files.reduce((sum, f) => sum + (f.bytes_size || 0), 0);
     const currentMB = (totalBytes / (1024 * 1024)).toFixed(2);
 
     let sidebarFoldersHTML = '';
@@ -122,23 +109,23 @@ import { getState, setState } from './store.js';
       const stopEndColor = isKuliah ? '#4338ca' : '#b45309';
 
       const folderListHTML = isKuliah ? `
-        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-700 bg-indigo-50/50 text-indigo-700 border border-indigo-100 rounded-xl text-left text-xs font-bold transition-all">
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-700 bg-indigo-50/50 text-indigo-700 border border-indigo-100 rounded-xl text-left text-xs font-bold transition-all border-solid">
           <i data-lucide="folder-open" class="w-4 h-4"></i> / Drive Utama
         </button>
-        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all border-none bg-transparent cursor-pointer">
           <i data-lucide="folder" class="w-4 h-4"></i> Draf-Skripsi
         </button>
-        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all border-none bg-transparent cursor-pointer">
           <i data-lucide="folder" class="w-4 h-4"></i> Jurnal-Riset
         </button>
       ` : `
-        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-700 bg-amber-50/50 text-amber-700 border border-amber-100 rounded-xl text-left text-xs font-bold transition-all">
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-700 bg-amber-50/50 text-amber-700 border border-amber-100 rounded-xl text-left text-xs font-bold transition-all border-solid">
           <i data-lucide="folder-open" class="w-4 h-4"></i> / root
         </button>
-        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all border-none bg-transparent cursor-pointer">
           <i data-lucide="folder" class="w-4 h-4"></i> Projek-Web
         </button>
-        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all">
+        <button class="w-full flex items-center gap-2.5 px-3 py-2 text-surface-500 hover:bg-surface-100 hover:text-surface-800 rounded-xl text-left text-xs font-semibold transition-all border-none bg-transparent cursor-pointer">
           <i data-lucide="folder" class="w-4 h-4"></i> Tugas-BasisData
         </button>
       `;
@@ -158,9 +145,7 @@ import { getState, setState } from './store.js';
             
             <div class="relative w-28 h-28 flex items-center justify-center">
               <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <!-- Outer Track -->
                 <circle cx="50" cy="50" r="36" stroke="var(--color-surface-100)" stroke-width="7" fill="transparent" />
-                <!-- Progress Ring -->
                 <circle cx="50" cy="50" r="36" stroke="url(#${gradientId})" stroke-width="7" fill="transparent" 
                   stroke-dasharray="${strokeDasharray}" stroke-dashoffset="${strokeDashoffset}" stroke-linecap="round" 
                   class="transition-all duration-1000" />
@@ -205,33 +190,39 @@ import { getState, setState } from './store.js';
       `;
     } else {
       files.forEach((file, idx) => {
+        const uploadDate = new Date(file.created_at).toLocaleDateString('id-ID', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+
         mainListHTML += `
           <div class="p-3.5 border border-surface-150 rounded-2xl bg-white flex items-center justify-between gap-4 hover:shadow-sm hover:border-surface-200 transition-all group">
             <div class="flex items-center gap-3">
               <div class="p-2.5 rounded-xl bg-surface-50 text-surface-500 group-hover:${iconAccent} group-hover:bg-accent-50/20 transition-all shrink-0">
-                <i data-lucide="${getFileIcon(file.type)}" class="w-5.5 h-5.5"></i>
+                <i data-lucide="${getFileIcon(file.file_type)}" class="w-5.5 h-5.5"></i>
               </div>
               <div class="min-w-0">
                 <h4 class="font-bold text-sm text-surface-900 leading-snug truncate group-hover:${iconAccent} transition-colors">${file.name}</h4>
                 <p class="text-[10px] text-surface-400 font-semibold mt-0.5 flex items-center gap-1.5 flex-wrap">
-                  <span>${file.size}</span>
+                  <span>${file.size_str}</span>
                   <span>•</span>
-                  <span>Diunggah: ${file.date}</span>
+                  <span>Diunggah: ${uploadDate}</span>
                 </p>
               </div>
             </div>
             
             <div class="flex items-center gap-1">
               <button 
-                data-dl-name="${file.name}"
-                class="download-btn p-2 hover:bg-surface-100 rounded-xl text-surface-500 hover:text-surface-700 transition-colors cursor-pointer"
+                data-dl-idx="${idx}"
+                class="download-btn p-2 hover:bg-surface-100 rounded-xl text-surface-500 hover:text-surface-700 transition-colors cursor-pointer border-none bg-transparent"
                 title="Unduh"
               >
                 <i data-lucide="download" class="w-4 h-4"></i>
               </button>
               <button 
                 data-del-idx="${idx}"
-                class="delete-btn p-2 hover:bg-red-50 rounded-xl text-surface-400 hover:text-red-600 transition-colors cursor-pointer"
+                class="delete-btn p-2 hover:bg-red-50 rounded-xl text-surface-400 hover:text-red-600 transition-colors cursor-pointer border-none bg-transparent"
                 title="Hapus"
               >
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -272,19 +263,58 @@ import { getState, setState } from './store.js';
 
     // Register button handlers
     document.querySelectorAll('.download-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const name = btn.getAttribute('data-dl-name');
-        alert(`Mengunduh berkas: ${name}...`);
+      btn.addEventListener('click', async () => {
+        const idx = parseInt(btn.getAttribute('data-dl-idx'));
+        const fileObj = files[idx];
+        
+        try {
+          // Generate Signed URL for secure download
+          const { data, error } = await supabase.storage
+            .from('user-documents')
+            .createSignedUrl(fileObj.storage_path, 60);
+
+          if (error || !data) throw error || new Error('URL null');
+
+          const a = document.createElement('a');
+          a.href = data.signedUrl;
+          a.download = fileObj.name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } catch (e) {
+          alert(`Gagal mengunduh berkas: ${e.message}`);
+        }
       });
     });
 
     document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const idx = parseInt(btn.getAttribute('data-del-idx'));
-        if (confirm('Apakah Anda yakin ingin menghapus berkas ini?')) {
-          const list = getFiles();
-          list.splice(idx, 1);
-          saveFiles(list);
+        const fileObj = files[idx];
+        
+        if (confirm('Apakah Anda yakin ingin menghapus berkas ini secara permanen dari Supabase Storage?')) {
+          try {
+            // Delete from storage
+            const { error: storageErr } = await supabase.storage
+              .from('user-documents')
+              .remove([fileObj.storage_path]);
+
+            if (storageErr) console.warn('Peringatan: Berkas fisik di Storage tidak ditemukan/gagal dihapus.', storageErr);
+
+            // Delete database record
+            const { error: dbErr } = await supabase
+              .from('user_files')
+              .delete()
+              .eq('id', fileObj.id);
+
+            if (dbErr) throw dbErr;
+
+            files.splice(idx, 1);
+            renderFiles();
+            alert('Berkas berhasil dihapus.');
+          } catch (e) {
+            alert(`Gagal menghapus berkas: ${e.message}`);
+          }
         }
       });
     });
@@ -292,14 +322,18 @@ import { getState, setState } from './store.js';
     if (typeof lucide !== 'undefined') lucide.createIcons();
   };
 
-  // 4. File Upload Handler Simulation
+  // Initial Data Fetch
+  await fetchFiles();
+  renderFiles();
+
+  // 4. File Upload Handler integration with Supabase Storage
   const hiddenInput = document.getElementById('files-hidden-input');
   if (uploadTrigger && hiddenInput) {
     uploadTrigger.addEventListener('click', () => {
       hiddenInput.click();
     });
 
-    hiddenInput.addEventListener('change', (e) => {
+    hiddenInput.addEventListener('change', async (e) => {
       const selectedFile = e.target.files[0];
       if (!selectedFile) return;
 
@@ -314,34 +348,54 @@ import { getState, setState } from './store.js';
       else if (name.endsWith('.sql') || name.endsWith('.html') || name.endsWith('.css') || name.endsWith('.js')) type = 'code';
       else if (name.endsWith('.zip') || name.endsWith('.rar')) type = 'archive';
 
-      const newFileObj = {
-        name: selectedFile.name,
-        size: sizeStr,
-        date: 'Baru saja',
-        type: type
-      };
-
-      // Simulated Upload Latency
+      // Set Loading State
       uploadTrigger.setAttribute('disabled', 'true');
       const oldHTML = uploadTrigger.innerHTML;
       uploadTrigger.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Mengunggah...</span>`;
       if (typeof lucide !== 'undefined') lucide.createIcons();
 
-      setTimeout(() => {
-        const list = getFiles();
-        list.unshift(newFileObj);
-        saveFiles(list);
+      try {
+        const storagePath = `${userId}/${eduLevel}/${Date.now()}_${selectedFile.name}`;
 
+        // Upload physical file to Storage
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('user-documents')
+          .upload(storagePath, selectedFile);
+
+        if (uploadError) throw uploadError;
+
+        // Insert metadata row to public.user_files
+        const { data: dbData, error: dbError } = await supabase
+          .from('user_files')
+          .insert({
+            user_id: userId,
+            edu_level: eduLevel,
+            name: selectedFile.name,
+            size_str: sizeStr,
+            bytes_size: selectedFile.size,
+            file_type: type,
+            folder_name: eduLevel === 'sd' ? null : (eduLevel === 'kuliah' ? 'Drive Utama' : 'root'),
+            storage_path: storagePath
+          })
+          .select()
+          .single();
+
+        if (dbError) throw dbError;
+
+        if (dbData) {
+          files.unshift(dbData);
+        }
+
+        renderFiles();
+        alert(`Sukses mengunggah berkas: ${selectedFile.name}`);
+      } catch (err) {
+        alert(`Gagal mengunggah berkas ke Supabase: ${err.message || err}`);
+      } finally {
         uploadTrigger.removeAttribute('disabled');
         uploadTrigger.innerHTML = oldHTML;
         if (typeof lucide !== 'undefined') lucide.createIcons();
         hiddenInput.value = ''; // Reset input
-
-        alert(`Sukses mengunggah berkas: ${selectedFile.name}`);
-      }, 1000);
+      }
     });
   }
-
-  // Initial Execution
-  renderFiles();
 })();

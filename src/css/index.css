@@ -76,6 +76,17 @@ body {
   --color-accent-700: #4338ca;
 }
 
+[data-theme="admin"] {
+  --color-accent-50: #faf5ff;
+  --color-accent-100: #f3e8ff;
+  --color-accent-200: #e9d5ff;
+  --color-accent-300: #d8b4fe;
+  --color-accent-400: #c084fc;
+  --color-accent-500: #a855f7;
+  --color-accent-600: #9333ea;
+  --color-accent-700: #7e22ce;
+}
+
 /* Custom scrollbar for a cleaner look */
 ::-webkit-scrollbar {
   width: 8px;

@@ -1,7 +1,8 @@
-import { sidebarTexts, scheduleData, deadlinesData, progressData } from './db.js';
+import { sidebarTexts, scheduleData } from './db.js';
 import { getState } from './store.js';
+import { supabase } from './supabaseClient.js';
 
-(function() {
+(async function() {
   const eduLevel = getState('edu-level', 'smk');
   const username = getState('username', 'Keane');
 
@@ -31,11 +32,94 @@ import { getState } from './store.js';
   if (navGradesText) navGradesText.textContent = currentSidebar.grades;
   if (navFilesText) navFilesText.textContent = currentSidebar.files;
 
+  // Get active session
+  const { data: { session } } = await supabase.auth.getSession();
+  let uncompletedTasks = [];
+  let courseProgresses = [];
+
+  if (session) {
+    try {
+      // 1. Fetch active courses and modules for progress
+      const { data: activeCoursesDb } = await supabase
+        .from('courses')
+        .select('*, course_modules(id)')
+        .eq('edu_level', eduLevel)
+        .eq('is_active', true);
+
+      // Fetch user module progress
+      const { data: userProgress } = await supabase
+        .from('user_module_progress')
+        .select('module_id')
+        .eq('user_id', session.user.id)
+        .eq('completed', true);
+
+      const completedModuleIds = new Set(userProgress?.map(p => p.module_id) || []);
+
+      courseProgresses = (activeCoursesDb || []).map(c => {
+        const total = c.course_modules?.length || 0;
+        const completed = c.course_modules?.filter(m => completedModuleIds.has(m.id)).length || 0;
+        const val = total > 0 ? Math.round((completed / total) * 100) : 0;
+        
+        let color = 'bg-amber-500';
+        let text = 'text-amber-600';
+        if (eduLevel === 'sd') {
+          if (c.title.includes('Matematika')) { color = 'bg-sky-500'; text = 'text-sky-500'; }
+          else if (c.title.includes('Bahasa')) { color = 'bg-emerald-500'; text = 'text-emerald-500'; }
+          else { color = 'bg-purple-500'; text = 'text-purple-500'; }
+        } else {
+          // SMK / Kuliah
+          if (c.title.includes('Basis Data') || c.title.includes('RPL')) { color = 'bg-indigo-500'; text = 'text-indigo-500'; }
+          else if (c.title.includes('Front End') || c.title.includes('Web')) { color = 'bg-emerald-500'; text = 'text-emerald-500'; }
+          else { color = 'bg-amber-500'; text = 'text-amber-600'; }
+        }
+
+        return { name: c.title, val: `${val}%`, color, text };
+      });
+
+      // 2. Fetch active courses with tasks for deadlines
+      const { data: activeCoursesWithTasks } = await supabase
+        .from('courses')
+        .select('*, course_tasks(*)')
+        .eq('edu_level', eduLevel)
+        .eq('is_active', true);
+
+      // Fetch user task submissions
+      const { data: taskSubmissions } = await supabase
+        .from('user_task_submissions')
+        .select('task_id')
+        .eq('user_id', session.user.id)
+        .eq('completed', true);
+
+      const submittedTaskIds = new Set(taskSubmissions?.map(s => s.task_id) || []);
+
+      // Extract uncompleted tasks
+      (activeCoursesWithTasks || []).forEach(c => {
+        (c.course_tasks || []).forEach(t => {
+          if (!submittedTaskIds.has(t.id)) {
+            uncompletedTasks.push({
+              title: t.title,
+              subject: c.title,
+              due: new Date(t.due_date).toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }) + ', 23:59 WIB',
+              borderColor: 'border-orange-100 bg-orange-50/50 hover:bg-orange-50',
+              textColor: 'text-orange-600'
+            });
+          }
+        });
+      });
+    } catch (e) {
+      console.error('Failed to load dashboard data from Supabase:', e);
+    }
+  }
+
   // 3. Welcome Banner Custom Wording & Badge
   const bannerTitle = document.getElementById('banner-title');
   const bannerDesc = document.getElementById('banner-desc');
   const bannerBadgeContainer = document.getElementById('banner-badge-container');
   const bannerContainer = document.getElementById('welcome-banner-container');
+
+  const taskCountText = uncompletedTasks.length > 0 
+    ? `memiliki <strong>${uncompletedTasks.length} tugas</strong>`
+    : `<strong>tidak memiliki tugas tersisa</strong>`;
 
   if (eduLevel === 'sd') {
     if (bannerContainer) bannerContainer.className = 'bg-gradient-sd rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-sky-300 relative overflow-hidden hover-lift';
@@ -45,7 +129,7 @@ import { getState } from './store.js';
     }
     if (bannerDesc) {
       bannerDesc.className = 'text-sky-50 max-w-xl text-sm sm:text-base leading-relaxed';
-      bannerDesc.innerHTML = `Hari ini kamu memiliki <strong>2 tugas seru</strong> yang harus diselesaikan. Yuk, selesaikan sekarang dan kumpulkan poinmu!`;
+      bannerDesc.innerHTML = `Hari ini kamu ${taskCountText} yang harus diselesaikan. Yuk, selesaikan sekarang dan kumpulkan bintangmu!`;
     }
     if (bannerBadgeContainer) {
       bannerBadgeContainer.innerHTML = `<i data-lucide="award" class="w-12 h-12 text-sky-400 drop-shadow-[0_4px_10px_rgba(255,255,255,0.3)]"></i>`;
@@ -58,13 +142,13 @@ import { getState } from './store.js';
     }
     if (bannerDesc) {
       bannerDesc.className = 'text-indigo-150 max-w-xl text-sm sm:text-base leading-relaxed';
-      bannerDesc.innerHTML = `Anda memiliki <strong>2 tugas kuliah</strong> dengan tenggat waktu hari ini. Silakan periksa kelengkapan berkas submisi Anda.`;
+      bannerDesc.innerHTML = `Anda ${taskCountText} kuliah dengan tenggat waktu hari ini. Silakan periksa kelengkapan berkas submisi Anda.`;
     }
     if (bannerBadgeContainer) {
       bannerBadgeContainer.innerHTML = `<i data-lucide="book-open" class="w-12 h-12 text-indigo-300 drop-shadow-[0_4px_10px_rgba(99,102,241,0.3)]"></i>`;
     }
   } else {
-    // SMK (Default)
+    // SMK
     if (bannerContainer) bannerContainer.className = 'bg-gradient-smk rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-amber-400 relative overflow-hidden hover-lift';
     if (bannerTitle) {
       bannerTitle.className = 'text-2xl sm:text-3xl font-extrabold tracking-tight mb-2';
@@ -72,7 +156,7 @@ import { getState } from './store.js';
     }
     if (bannerDesc) {
       bannerDesc.className = 'text-amber-50 max-w-xl text-sm sm:text-base leading-relaxed';
-      bannerDesc.innerHTML = `Anda memiliki <strong>2 tugas</strong> yang tenggat waktunya hari ini. Mari selesaikan proyek kreatif Anda dan pertahankan nilai luar biasa itu!`;
+      bannerDesc.innerHTML = `Anda ${taskCountText} yang tenggat waktunya hari ini. Mari selesaikan proyek kreatif Anda dan pertahankan nilai luar biasa itu!`;
     }
     if (bannerBadgeContainer) {
       bannerBadgeContainer.innerHTML = `<i data-lucide="rocket" class="w-12 h-12 text-amber-300 drop-shadow-[0_4px_10px_rgba(245,158,11,0.3)]"></i>`;
@@ -88,7 +172,6 @@ import { getState } from './store.js';
   if (scheduleTitle) scheduleTitle.innerHTML = `<i data-lucide="clock" class="w-5 h-5 text-accent-500"></i> ${currentSchedule.title}`;
   if (scheduleDate) {
     scheduleDate.textContent = currentSchedule.date;
-    // Set theme classes
     if (eduLevel === 'sd') {
       scheduleDate.className = 'text-xs font-medium bg-sky-100 text-sky-700 px-2.5 py-1 rounded-full';
     } else if (eduLevel === 'kuliah') {
@@ -99,7 +182,7 @@ import { getState } from './store.js';
   }
 
   if (scheduleContainer) {
-    scheduleContainer.innerHTML = ''; // Clear template
+    scheduleContainer.innerHTML = '';
     currentSchedule.items.forEach((item, idx) => {
       const isLast = idx === currentSchedule.items.length - 1;
       const statusBadge = item.statusType === 'active' 
@@ -114,7 +197,7 @@ import { getState } from './store.js';
         : 'bg-surface-300';
       
       const actionButton = item.statusType === 'active'
-        ? `<button class="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-sm mt-3 ${eduLevel === 'sd' ? 'bg-sky-400 hover:bg-sky-500 text-white' : (eduLevel === 'kuliah' ? 'bg-indigo-500 hover:bg-indigo-600 text-white' : 'bg-accent-400 hover:bg-accent-500 text-surface-900')}">Masuk Kelas</button>`
+        ? `<button class="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors shadow-sm mt-3 ${eduLevel === 'sd' ? 'bg-sky-400 hover:bg-sky-500 text-white' : (eduLevel === 'kuliah' ? 'bg-indigo-50 hover:bg-indigo-600 text-white' : 'bg-accent-400 hover:bg-accent-500 text-surface-900')} border-none cursor-pointer">Masuk Kelas</button>`
         : '';
 
       const timelineHTML = `
@@ -152,26 +235,36 @@ import { getState } from './store.js';
   const deadlinesTitle = document.getElementById('deadlines-title');
   const deadlinesContainer = document.getElementById('deadlines-container');
 
-  const currentDeadlines = deadlinesData[eduLevel];
-  if (deadlinesTitle) deadlinesTitle.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5 text-orange-500"></i> ${currentDeadlines.title}`;
+  const deadlineHeadlineText = eduLevel === 'sd' ? 'Tugas Belajar' : (eduLevel === 'kuliah' ? 'Tenggat Kuliah' : 'Tugas Mendatang');
+  if (deadlinesTitle) deadlinesTitle.innerHTML = `<i data-lucide="alert-circle" class="w-5 h-5 text-orange-500"></i> ${deadlineHeadlineText}`;
   
   if (deadlinesContainer) {
     deadlinesContainer.innerHTML = '';
-    currentDeadlines.items.forEach(task => {
-      const taskHTML = `
-        <div class="p-3 border rounded-xl transition-all hover-lift cursor-pointer ${task.borderColor}">
-          <h4 class="font-semibold text-sm text-surface-900 mb-1">${task.title}</h4>
-          <p class="text-xs text-surface-500 mb-2">${task.subject}</p>
-          <div class="flex items-center justify-between text-xs font-medium">
-            <span class="${task.textColor} flex items-center gap-1">
-              <i data-lucide="clock" class="w-3 h-3"></i> ${task.due}
-            </span>
-            <span class="text-surface-400">Belum Dikumpul</span>
-          </div>
+    if (uncompletedTasks.length === 0) {
+      deadlinesContainer.innerHTML = `
+        <div class="p-6 text-center text-surface-500 bg-white border border-surface-100 rounded-2xl flex flex-col items-center justify-center space-y-2">
+          <i data-lucide="check-circle" class="w-8 h-8 text-emerald-500"></i>
+          <p class="font-bold text-xs text-surface-800">Semua tugas telah diselesaikan!</p>
+          <p class="text-[10px] text-surface-400">Pertahankan kerja kerasmu! 🎉</p>
         </div>
       `;
-      deadlinesContainer.insertAdjacentHTML('beforeend', taskHTML);
-    });
+    } else {
+      uncompletedTasks.forEach(task => {
+        const taskHTML = `
+          <div class="p-3 border rounded-xl transition-all hover-lift cursor-pointer bg-white ${task.borderColor}">
+            <h4 class="font-semibold text-sm text-surface-900 mb-1">${task.title}</h4>
+            <p class="text-xs text-surface-500 mb-2">${task.subject}</p>
+            <div class="flex items-center justify-between text-xs font-medium">
+              <span class="${task.textColor} flex items-center gap-1">
+                <i data-lucide="clock" class="w-3 h-3"></i> ${task.due}
+              </span>
+              <span class="text-surface-450 font-semibold">Belum Dikumpul</span>
+            </div>
+          </div>
+        `;
+        deadlinesContainer.insertAdjacentHTML('beforeend', taskHTML);
+      });
+    }
   }
 
   // 6. Dynamic Progress Section OR Custom GPA Card (For College Level)
@@ -179,7 +272,6 @@ import { getState } from './store.js';
   const progressContainer = document.getElementById('progress-container');
 
   if (eduLevel === 'kuliah') {
-    // Render GPA display
     if (progressTitle) progressTitle.innerHTML = `<i data-lucide="award" class="w-5 h-5 text-indigo-500"></i> Hasil Studi Akademik`;
     if (progressContainer) {
       progressContainer.innerHTML = `
@@ -215,12 +307,12 @@ import { getState } from './store.js';
       `;
     }
   } else {
-    // Render progress lists
-    const currentProg = progressData[eduLevel];
-    if (progressTitle) progressTitle.innerHTML = `<i data-lucide="bar-chart-2" class="w-5 h-5 ${eduLevel === 'sd' ? 'text-sky-500' : 'text-accent-500'}"></i> ${currentProg.title}`;
+    const progressHeadlineText = eduLevel === 'sd' ? 'Kemajuan Belajar' : 'Progress Belajar';
+    if (progressTitle) progressTitle.innerHTML = `<i data-lucide="bar-chart-2" class="w-5 h-5 ${eduLevel === 'sd' ? 'text-sky-500' : 'text-accent-500'}"></i> ${progressHeadlineText}`;
+    
     if (progressContainer) {
       progressContainer.innerHTML = '';
-      currentProg.items.forEach(c => {
+      courseProgresses.forEach(c => {
         const progHTML = `
           <div>
             <div class="flex justify-between text-sm mb-1">
@@ -237,7 +329,6 @@ import { getState } from './store.js';
     }
   }
 
-  // Re-create icons for newly added HTML structures
   if (typeof lucide !== 'undefined') {
     lucide.createIcons();
   }

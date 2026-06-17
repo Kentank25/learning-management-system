@@ -1,7 +1,8 @@
-import { sidebarTexts, coursesData } from './db.js';
+import { sidebarTexts } from './db.js';
 import { getState } from './store.js';
+import { supabase } from './supabaseClient.js';
 
-(function() {
+(async function() {
   const eduLevel = getState('edu-level', 'smk');
   const username = getState('username', 'Keane');
 
@@ -39,9 +40,41 @@ import { getState } from './store.js';
     if (semesterFilter) semesterFilter.classList.add('hidden');
   }
 
-  // 3. Render dynamic content
+  // 3. Fetch Supabase Data
   const contentArea = document.getElementById('grades-content-area');
-  const courses = coursesData[eduLevel] || [];
+  let courses = [];
+  let completedModuleIds = new Set();
+  let quizAttempts = [];
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    try {
+      // Fetch active courses
+      const { data: activeCoursesDb } = await supabase
+        .from('courses')
+        .select('*, course_modules(id)')
+        .eq('edu_level', eduLevel)
+        .eq('is_active', true);
+      if (activeCoursesDb) courses = activeCoursesDb;
+
+      // Fetch user module progress
+      const { data: userProgress } = await supabase
+        .from('user_module_progress')
+        .select('module_id')
+        .eq('user_id', session.user.id)
+        .eq('completed', true);
+      if (userProgress) completedModuleIds = new Set(userProgress.map(p => p.module_id));
+
+      // Fetch quiz attempts
+      const { data: attempts } = await supabase
+        .from('user_quiz_attempts')
+        .select('*')
+        .eq('user_id', session.user.id);
+      if (attempts) quizAttempts = attempts;
+    } catch (e) {
+      console.error('Failed to load grades from Supabase:', e);
+    }
+  }
 
   const renderSDGrades = () => {
     if (!contentArea) return;
@@ -50,16 +83,26 @@ import { getState } from './store.js';
     let totalStars = 0;
     const courseStars = {};
     courses.forEach(c => {
-      const stars = parseInt(getState(`kuis-stars-${c.id}`) || 0);
+      const attempt = quizAttempts.find(a => a.course_id === c.id);
+      const stars = attempt ? attempt.stars_earned : 0;
       courseStars[c.id] = stars;
       totalStars += stars;
     });
+
+    // Calculate module progresses for badges
+    const getProgressVal = (cId) => {
+      const c = courses.find(item => item.id === cId);
+      if (!c) return 0;
+      const total = c.course_modules?.length || 0;
+      const completed = c.course_modules?.filter(m => completedModuleIds.has(m.id)).length || 0;
+      return total > 0 ? Math.round((completed / total) * 100) : 0;
+    };
 
     // Unlocked badges criteria
     const badges = [
       { id: 1, name: 'Juara Angka 🔢', desc: 'Selesaikan kuis Matematika Ceria dengan 10 Bintang', icon: 'calculator', color: 'bg-sky-100 text-sky-600 border-sky-200', unlocked: courseStars[1] >= 10 },
       { id: 2, name: 'Kutu Buku Cilik 📖', desc: 'Selesaikan kuis Bahasa Indonesia dengan 10 Bintang', icon: 'book-open', color: 'bg-emerald-100 text-emerald-600 border-emerald-200', unlocked: courseStars[2] >= 10 },
-      { id: 3, name: 'Pelukis Hebat 🎨', desc: 'Menggambar & Mewarnai mencapai progres 100%', icon: 'palette', color: 'bg-purple-100 text-purple-600 border-purple-200', unlocked: (getState('progress-course-3') || 100) == 100 },
+      { id: 3, name: 'Pelukis Hebat 🎨', desc: 'Menggambar & Mewarnai mencapai progres 100%', icon: 'palette', color: 'bg-purple-100 text-purple-600 border-purple-200', unlocked: getProgressVal(3) === 100 },
       { id: 4, name: 'Sahabat Garuda 🦅', desc: 'Selesaikan kuis Pendidikan Pancasila dengan 10 Bintang', icon: 'heart', color: 'bg-rose-100 text-rose-600 border-rose-200', unlocked: courseStars[4] >= 10 }
     ];
 
@@ -112,7 +155,6 @@ import { getState } from './store.js';
 
     courses.forEach(c => {
       const stars = courseStars[c.id];
-      const hasKuis = c.kuis && c.kuis.length > 0;
       
       let starIconsHTML = '';
       if (stars > 0) {
@@ -202,10 +244,11 @@ import { getState } from './store.js';
     const itemsHTML = [];
 
     courses.forEach(c => {
-      const savedProg = getState(`progress-course-${c.id}`);
-      const progressVal = savedProg !== null ? parseInt(savedProg) : c.progress;
+      const total = c.course_modules?.length || 0;
+      const completed = c.course_modules?.filter(m => completedModuleIds.has(m.id)).length || 0;
+      const progressVal = total > 0 ? Math.round((completed / total) * 100) : 0;
       
-      // Calculate dynamic mock score (e.g. progress = 100 -> score 95, progress = 65 -> score 78)
+      // Calculate dynamic mock score
       let score = 50 + Math.round(progressVal * 0.45);
       if (progressVal === 100) score = 95;
       else if (progressVal === 0) score = 0;
@@ -223,12 +266,15 @@ import { getState } from './store.js';
         ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center gap-1 w-fit"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Kompeten</span>`
         : `<span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-600 border border-amber-100 flex items-center gap-1 w-fit"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Belajar Aktif</span>`;
 
-      // Mock comments
       const comments = {
         1: 'Sangat menguasai struktur database dan kueri SQL tingkat lanjut.',
         2: 'Kreativitas desain antarmuka baik, tingkatkan pemahaman JavaScript ES6.',
         3: 'Kelulusan kompetensi sempurna. Pemahaman OOP Java sangat baik!',
-        4: 'Ikuti sesi lab tambahan untuk mengoptimalkan proyek Flutter Anda.'
+        4: 'Ikuti sesi lab tambahan untuk mengoptimalkan proyek Flutter Anda.',
+        5: 'Sangat menguasai struktur database dan kueri SQL tingkat lanjut.',
+        6: 'Kreativitas desain antarmuka baik, tingkatkan pemahaman JavaScript ES6.',
+        7: 'Kelulusan kompetensi sempurna. Pemahaman OOP Java sangat baik!',
+        8: 'Ikuti sesi lab tambahan untuk mengoptimalkan proyek Flutter Anda.'
       };
 
       const courseHTML = `
@@ -254,7 +300,7 @@ import { getState } from './store.js';
       itemsHTML.push(courseHTML);
     });
 
-    const average = Math.round(totalScore / countedCourses) || 0;
+    const average = countedCourses > 0 ? Math.round(totalScore / countedCourses) : 0;
     const competencyStatus = average >= 75 ? 'Kompeten Seutuhnya ✅' : 'Tingkatkan Nilai Kompetensi';
 
     let html = `
@@ -295,7 +341,7 @@ import { getState } from './store.js';
       <div class="bg-white border border-surface-200 rounded-3xl shadow-sm overflow-hidden">
         <div class="p-5 border-b border-surface-100">
           <h3 class="font-bold text-surface-900 text-base flex items-center gap-2">
-            <i data-lucide="list-todo" class="w-5 h-5 text-amber-500"></i> Hasil Kompetensi Kejuruan RPL
+            <i data-lucide="list-todo" class="w-5 h-5 text-amber-500"></i> Hasil Kompetensi Kejuruan
           </h3>
         </div>
         <div class="overflow-x-auto">
@@ -331,18 +377,19 @@ import { getState } from './store.js';
 
     // Mock scores per course
     const courseGrades = {
-      1: { score: 88, letter: 'A', point: 4.0 }, // RPL
-      2: { score: 78, letter: 'B+', point: 3.3 }, // Basis Data Lanjut
-      3: { score: 95, letter: 'A', point: 4.0 }, // Analisis Algoritma
-      4: { score: 72, letter: 'B', point: 3.0 } // Pemweb Enterprise
+      9: { score: 88, letter: 'A', point: 4.0 }, // RPL
+      10: { score: 78, letter: 'B+', point: 3.3 }, // Basis Data Lanjut
+      11: { score: 95, letter: 'A', point: 4.0 }, // Analisis Algoritma
+      12: { score: 72, letter: 'B', point: 3.0 } // Pemweb Enterprise
     };
 
     courses.forEach(c => {
       // SKS weight parsing from tag (e.g. "3 SKS" -> 3)
       const sksVal = parseInt(c.tag.replace(/\D/g, '')) || 3;
       
-      const savedProg = getState(`progress-course-${c.id}`);
-      const progressVal = savedProg !== null ? parseInt(savedProg) : c.progress;
+      const total = c.course_modules?.length || 0;
+      const completed = c.course_modules?.filter(m => completedModuleIds.has(m.id)).length || 0;
+      const progressVal = total > 0 ? Math.round((completed / total) * 100) : 0;
 
       // Dynamic calculation helper
       let scoreInfo = courseGrades[c.id] || { score: 80, letter: 'A-', point: 3.7 };
@@ -380,7 +427,7 @@ import { getState } from './store.js';
       itemsHTML.push(courseHTML);
     });
 
-    const gpa = (totalGPPoints / totalSKS) || 3.85;
+    const gpa = totalSKS > 0 ? (totalGPPoints / totalSKS) : 3.85;
 
     let html = `
       <!-- Header stats -->
@@ -453,8 +500,6 @@ import { getState } from './store.js';
     renderSDGrades();
   } else if (eduLevel === 'kuliah') {
     renderKuliahGrades();
-    
-    // Semester select listener
     const select = document.getElementById('semester-select');
     if (select) {
       select.addEventListener('change', (e) => {

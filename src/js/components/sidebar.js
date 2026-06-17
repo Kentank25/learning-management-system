@@ -7,6 +7,7 @@ import { sidebarTexts } from '../db.js';
  */
 export function renderSidebar() {
   const eduLevel = getState('edu-level', 'smk');
+  const isAdmin = getState('is-admin') === true;
   const texts = sidebarTexts[eduLevel] || sidebarTexts['smk'];
   const path = window.location.pathname;
   
@@ -28,6 +29,34 @@ export function renderSidebar() {
 
   // SD theme hides Calendar and Personal Files
   const isSD = eduLevel === 'sd';
+
+  if (isAdmin) {
+    return `
+      <!-- Logo Area -->
+      <div class="h-16 flex items-center px-6 border-b border-surface-200/50">
+        <div class="flex items-center gap-2 text-accent-600 font-bold text-xl tracking-tight font-display">
+          <i data-lucide="graduation-cap" class="w-6 h-6 text-accent-500"></i>
+          <span>Sekolah<span class="text-surface-900">Mu</span> <span class="text-[10px] px-2 py-0.5 bg-red-50 text-red-600 rounded-full font-extrabold ml-1 uppercase border border-red-200/50">Admin</span></span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <a href="admin.html" class="${getLinkClass('admin.html')}">
+          <i data-lucide="shield-alert" class="w-5 h-5"></i>
+          <span id="nav-admin-text">Admin Panel</span>
+        </a>
+      </nav>
+
+      <!-- Bottom User Actions -->
+      <div class="p-4 border-t border-surface-200/50">
+        <a href="#" id="logout-btn" class="flex items-center gap-3 px-3 py-2 text-surface-600 hover:text-red-650 hover:bg-red-50/50 rounded-lg font-medium transition-colors">
+          <i data-lucide="log-out" class="w-5 h-5"></i>
+          Keluar
+        </a>
+      </div>
+    `;
+  }
 
   return `
     <!-- Logo Area -->

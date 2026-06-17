@@ -1,7 +1,8 @@
-import { sidebarTexts, calendarData } from './db.js';
-import { getState, setState } from './store.js';
+import { sidebarTexts } from './db.js';
+import { getState } from './store.js';
+import { supabase } from './supabaseClient.js';
 
-(function() {
+(async function() {
   const eduLevel = getState('edu-level', 'smk');
   const username = getState('username', 'Keane');
 
@@ -59,23 +60,23 @@ import { getState, setState } from './store.js';
   const calendarCapIcon = document.querySelector('aside .text-accent-600');
 
   if (eduLevel === 'sd') {
-    if (addAgendaBtn) addAgendaBtn.className = 'w-full mt-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98';
-    if (submitAgendaFormBtn) submitAgendaFormBtn.className = 'w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 mt-2';
+    if (addAgendaBtn) addAgendaBtn.className = 'w-full mt-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 border-none';
+    if (submitAgendaFormBtn) submitAgendaFormBtn.className = 'w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 mt-2 border-none';
     if (calendarCapIcon) {
       calendarCapIcon.classList.remove('text-accent-600');
       calendarCapIcon.classList.add('text-sky-500');
     }
   } else if (eduLevel === 'kuliah') {
-    if (addAgendaBtn) addAgendaBtn.className = 'w-full mt-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98';
-    if (submitAgendaFormBtn) submitAgendaFormBtn.className = 'w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 mt-2';
+    if (addAgendaBtn) addAgendaBtn.className = 'w-full mt-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 border-none';
+    if (submitAgendaFormBtn) submitAgendaFormBtn.className = 'w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 mt-2 border-none';
     if (calendarCapIcon) {
       calendarCapIcon.classList.remove('text-accent-600');
       calendarCapIcon.classList.add('text-indigo-600');
     }
   } else {
     // SMK
-    if (addAgendaBtn) addAgendaBtn.className = 'w-full mt-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98';
-    if (submitAgendaFormBtn) submitAgendaFormBtn.className = 'w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 mt-2';
+    if (addAgendaBtn) addAgendaBtn.className = 'w-full mt-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 border-none';
+    if (submitAgendaFormBtn) submitAgendaFormBtn.className = 'w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 mt-2 border-none';
     if (calendarCapIcon) {
       calendarCapIcon.classList.remove('text-accent-600');
       calendarCapIcon.classList.add('text-amber-500');
@@ -84,23 +85,31 @@ import { getState, setState } from './store.js';
 
   // 4. Interactive Calendar Logic
   let currentDate = new Date();
-  let currentMonth = currentDate.getMonth(); // 0-indexed (May = 4)
-  let currentYear = currentDate.getFullYear(); // 2026
+  let currentMonth = currentDate.getMonth(); 
+  let currentYear = currentDate.getFullYear(); 
   
-  // Selected date defaults to today or May 21, 2026 (matching existing mock)
+  // Selected date defaults to today or May 21, 2026
   let selectedDateStr = '2026-05-21';
+  let allAgendas = [];
 
-  // Load custom user agendas from localStorage
-  const loadCustomAgendas = () => {
-    const raw = getState('custom-agendas');
-    return raw ? raw : [];
+  // Fetch all agendas from Supabase
+  const fetchAgendas = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_agendas')
+        .select('*')
+        .eq('edu_level', eduLevel);
+
+      if (data) {
+        allAgendas = data;
+      }
+    } catch (e) {
+      console.error('Failed to fetch agendas from Supabase:', e);
+    }
   };
 
-  // Get combined agendas (static + custom)
   const getAgendasForLevel = () => {
-    const staticAgendas = calendarData[eduLevel] || [];
-    const customAgendas = loadCustomAgendas().filter(ag => ag.level === eduLevel);
-    return [...staticAgendas, ...customAgendas];
+    return allAgendas;
   };
 
   // UI elements
@@ -135,15 +144,9 @@ import { getState, setState } from './store.js';
     // Set Month Year Title
     if (monthYearLabel) monthYearLabel.textContent = `${monthNames[currentMonth]} ${currentYear}`;
     
-    // First day of month (e.g. May 1, 2026 is Friday)
     const firstDay = new Date(currentYear, currentMonth, 1);
-    // JS getDay(): Sun=0, Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6
-    // We start week on Sunday = 0
     const startDayIndex = firstDay.getDay();
-    
-    // Days in current month
     const totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
-    // Days in previous month
     const prevMonthTotalDays = new Date(currentYear, currentMonth, 0).getDate();
 
     const agendas = getAgendasForLevel();
@@ -156,7 +159,7 @@ import { getState, setState } from './store.js';
       const dateStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(dateNum).padStart(2, '0')}`;
       
       const dayEl = document.createElement('button');
-      dayEl.className = 'aspect-square bg-surface-50 border border-surface-100 rounded-lg text-surface-300 text-[10px] sm:text-xs font-semibold p-1 cursor-default opacity-50 flex flex-col justify-between items-start overflow-hidden relative';
+      dayEl.className = 'aspect-square bg-surface-50 border border-surface-100 rounded-lg text-surface-300 text-[10px] sm:text-xs font-semibold p-1 cursor-default opacity-50 flex flex-col justify-between items-start overflow-hidden relative border-none';
       dayEl.innerHTML = `<span>${dateNum}</span>`;
       calendarGrid.appendChild(dayEl);
     }
@@ -167,7 +170,6 @@ import { getState, setState } from './store.js';
       const dayAgendas = agendas.filter(ag => ag.date === dateStr);
       const isSelected = dateStr === selectedDateStr;
 
-      // Class mapping based on edu theme
       let dayBtnClass = 'aspect-square border rounded-lg text-xs font-semibold p-1 transition-all flex flex-col justify-between items-start cursor-pointer overflow-hidden relative ';
       
       if (isSelected) {
@@ -186,18 +188,17 @@ import { getState, setState } from './store.js';
       dayEl.className = dayBtnClass;
       dayEl.setAttribute('data-date', dateStr);
 
-      // Render dots for agendas on this day
+      // Render dots for agendas on this day (Max 3 dots center bottom)
       let dotsHTML = '';
       if (dayAgendas.length > 0) {
-        // Limit to max 3 dots to prevent overflow/crowding
         const visibleAgendas = dayAgendas.slice(0, 3);
         dotsHTML = `<div class="flex gap-1 absolute bottom-1.5 left-1/2 -translate-x-1/2 justify-center">`;
         visibleAgendas.forEach(ag => {
-          let dotColor = 'bg-emerald-500'; // class
+          let dotColor = 'bg-emerald-500'; 
           if (ag.type === 'deadline') dotColor = 'bg-orange-500';
           if (ag.type === 'event') dotColor = 'bg-indigo-500';
           
-          if (isSelected) dotColor = 'bg-white'; // White dots on selected day
+          if (isSelected) dotColor = 'bg-white'; 
           dotsHTML += `<span class="w-1 h-1 rounded-full ${dotColor}"></span>`;
         });
         dotsHTML += `</div>`;
@@ -205,7 +206,6 @@ import { getState, setState } from './store.js';
 
       dayEl.innerHTML = `<span>${i}</span>${dotsHTML}`;
       
-      // Click event
       dayEl.addEventListener('click', () => {
         selectedDateStr = dateStr;
         renderCalendar();
@@ -215,7 +215,7 @@ import { getState, setState } from './store.js';
       calendarGrid.appendChild(dayEl);
     }
 
-    // 3. Render next month's starting days to fill grid (7 columns * 5 or 6 rows = 35 or 42 grid cells)
+    // 3. Render next month's starting days to fill grid
     const totalCellsRendered = startDayIndex + totalDays;
     const remainingCells = totalCellsRendered % 7 === 0 ? 0 : 7 - (totalCellsRendered % 7);
     
@@ -224,7 +224,7 @@ import { getState, setState } from './store.js';
       const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
       
       const dayEl = document.createElement('button');
-      dayEl.className = 'aspect-square bg-surface-50 border border-surface-100 rounded-lg text-surface-300 text-[10px] sm:text-xs font-semibold p-1 cursor-default opacity-50 flex flex-col justify-between items-start overflow-hidden relative';
+      dayEl.className = 'aspect-square bg-surface-50 border border-surface-100 rounded-lg text-surface-300 text-[10px] sm:text-xs font-semibold p-1 cursor-default opacity-50 flex flex-col justify-between items-start overflow-hidden relative border-none';
       dayEl.innerHTML = `<span>${i}</span>`;
       calendarGrid.appendChild(dayEl);
     }
@@ -239,7 +239,6 @@ import { getState, setState } from './store.js';
     if (!agendaContainer) return;
     agendaContainer.innerHTML = '';
 
-    // Update selected date header string
     const dParts = dateStr.split('-');
     const dObj = new Date(parseInt(dParts[0]), parseInt(dParts[1]) - 1, parseInt(dParts[2]));
     if (selectedDateLabel) selectedDateLabel.textContent = formatFullDateStr(dObj);
@@ -250,8 +249,8 @@ import { getState, setState } from './store.js';
       agendaContainer.innerHTML = `
         <div class="h-48 flex flex-col items-center justify-center text-center text-surface-400">
           <i data-lucide="coffee" class="w-8 h-8 mb-2 text-surface-300"></i>
-          <p class="text-sm font-medium">Tidak ada kegiatan hari ini.</p>
-          <p class="text-xs text-surface-400 mt-0.5">Santai sejenak! ☕</p>
+          <p class="text-xs font-semibold">Tidak ada kegiatan terjadwal.</p>
+          <p class="text-[10px] text-surface-400 mt-0.5">Nikmati waktu istirahat Anda!</p>
         </div>
       `;
       if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -259,44 +258,29 @@ import { getState, setState } from './store.js';
     }
 
     agendas.forEach(ag => {
-      let typeBorder = 'border-l-emerald-500';
-      let typeBg = 'bg-emerald-50/50';
-      let typeText = 'text-emerald-700';
-      let typeLabel = 'Kelas Virtual / Belajar';
-      let typeIcon = 'video';
-
+      let iconName = 'calendar';
+      let iconColor = 'text-emerald-500 bg-emerald-50 border-emerald-100';
+      
       if (ag.type === 'deadline') {
-        typeBorder = 'border-l-orange-500';
-        typeBg = 'bg-orange-50/50';
-        typeText = 'text-orange-700';
-        typeLabel = 'Tenggat Tugas';
-        typeIcon = 'alert-circle';
+        iconName = 'alert-circle';
+        iconColor = 'text-orange-500 bg-orange-50 border-orange-100';
       } else if (ag.type === 'event') {
-        typeBorder = 'border-l-indigo-500';
-        typeBg = 'bg-indigo-50/50';
-        typeText = 'text-indigo-700';
-        typeLabel = 'Ujian / Acara Khusus';
-        typeIcon = 'award';
+        iconName = 'award';
+        iconColor = 'text-indigo-500 bg-indigo-50 border-indigo-100';
       }
 
-      const timeStr = ag.time || '08:00 WIB';
-
-      const agendaHTML = `
-        <div class="p-3 bg-white border border-surface-200 border-l-4 ${typeBorder} rounded-xl hover:shadow-sm transition-all flex items-start justify-between gap-3">
-          <div>
-            <h4 class="font-bold text-sm text-surface-900 leading-snug">${ag.title}</h4>
-            <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-              <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${typeBg} ${typeText}">
-                <i data-lucide="${typeIcon}" class="w-2.5 h-2.5"></i> ${typeLabel}
-              </span>
-              <span class="inline-flex items-center gap-1 text-[10px] font-semibold text-surface-500">
-                <i data-lucide="clock" class="w-2.5 h-2.5"></i> ${timeStr}
-              </span>
-            </div>
-          </div>
+      const agendaEl = document.createElement('div');
+      agendaEl.className = 'flex items-start gap-3 p-3.5 border border-surface-200/80 rounded-2xl hover:shadow-sm transition-all hover-lift cursor-pointer bg-white';
+      agendaEl.innerHTML = `
+        <div class="p-2 border rounded-xl ${iconColor} shrink-0">
+          <i data-lucide="${iconName}" class="w-4.5 h-4.5"></i>
+        </div>
+        <div>
+          <h4 class="font-bold text-xs text-surface-900 leading-snug">${ag.title}</h4>
+          <span class="text-[10px] text-surface-400 font-bold block mt-1 uppercase tracking-wide">${ag.type === 'class' ? 'Sesi Kelas' : (ag.type === 'deadline' ? 'Tenggat Waktu' : 'Acara Khusus')}</span>
         </div>
       `;
-      agendaContainer.insertAdjacentHTML('beforeend', agendaHTML);
+      agendaContainer.appendChild(agendaEl);
     });
 
     if (typeof lucide !== 'undefined') {
@@ -304,8 +288,10 @@ import { getState, setState } from './store.js';
     }
   };
 
-  // Month navigation buttons
-  if (prevMonthBtn) {
+  // Fetch initial data
+  await fetchAgendas();
+
+  if (prevMonthBtn && nextMonthBtn) {
     prevMonthBtn.addEventListener('click', () => {
       currentMonth--;
       if (currentMonth < 0) {
@@ -314,9 +300,7 @@ import { getState, setState } from './store.js';
       }
       renderCalendar();
     });
-  }
 
-  if (nextMonthBtn) {
     nextMonthBtn.addEventListener('click', () => {
       currentMonth++;
       if (currentMonth > 11) {
@@ -327,7 +311,7 @@ import { getState, setState } from './store.js';
     });
   }
 
-  // 5. Modal New Agenda Interaction
+  // Modal New Agenda Interaction
   const modal = document.getElementById('agenda-modal');
   const closeModalBtn = document.getElementById('close-modal-btn');
   const agendaForm = document.getElementById('agenda-form');
@@ -335,12 +319,9 @@ import { getState, setState } from './store.js';
 
   const openModal = () => {
     if (!modal) return;
-    
-    // Set default date input in modal to match currently selected date grid
     if (agendaDateInput) {
       agendaDateInput.value = selectedDateStr;
     }
-
     modal.classList.remove('hidden');
     setTimeout(() => {
       modal.classList.remove('opacity-0');
@@ -350,7 +331,6 @@ import { getState, setState } from './store.js';
 
   const closeModal = () => {
     if (!modal) return;
-    
     modal.classList.add('opacity-0');
     modal.querySelector('.transform').classList.add('scale-95');
     setTimeout(() => {
@@ -363,34 +343,43 @@ import { getState, setState } from './store.js';
 
   // Form Submission
   if (agendaForm) {
-    agendaForm.addEventListener('submit', (e) => {
+    agendaForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const title = document.getElementById('agenda-title').value;
       const date = document.getElementById('agenda-date').value;
-      const timeVal = document.getElementById('agenda-time').value;
       const type = document.getElementById('agenda-type').value;
 
-      const timeFormatted = `${timeVal} WIB`;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-      const newAgenda = {
-        level: eduLevel,
-        date,
-        title,
-        time: timeFormatted,
-        type
-      };
+      try {
+        const { data, error } = await supabase
+          .from('calendar_agendas')
+          .insert({
+            user_id: session.user.id,
+            edu_level: eduLevel,
+            date: date,
+            title: title,
+            type: type
+          })
+          .select()
+          .single();
 
-      // Save to localStorage
-      const list = loadCustomAgendas();
-      list.push(newAgenda);
-      setState('custom-agendas', list);
+        if (error) throw error;
+
+        if (data) {
+          allAgendas.push(data);
+        }
+      } catch (err) {
+        console.error('Failed to add custom agenda to Supabase:', err);
+      }
 
       // Reset Form & Close Modal
       agendaForm.reset();
       closeModal();
 
-      // Refresh Calendar and view the added date
+      // Refresh Calendar
       selectedDateStr = date;
       const dateParts = date.split('-');
       currentYear = parseInt(dateParts[0]);
@@ -401,7 +390,7 @@ import { getState, setState } from './store.js';
     });
   }
 
-  // Initial Execution
+  // Initial execution
   renderCalendar();
   renderAgendasList(selectedDateStr);
 })();

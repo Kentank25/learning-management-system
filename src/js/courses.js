@@ -1,7 +1,8 @@
-import { sidebarTexts, coursesData, historyCoursesData } from './db.js';
+import { sidebarTexts } from './db.js';
 import { getState } from './store.js';
+import { supabase } from './supabaseClient.js';
 
-(function() {
+(async function() {
   const eduLevel = getState('edu-level', 'smk');
   const username = getState('username', 'Keane');
 
@@ -37,8 +38,83 @@ import { getState } from './store.js';
   if (coursesPageTitle) coursesPageTitle.textContent = currentSidebar.pageTitle;
   if (coursesPageDesc) coursesPageDesc.textContent = currentSidebar.pageDesc;
 
-  // 4. Dynamic Courses List Data
-  const currentCourses = coursesData[eduLevel] || [];
+  // 4. Fetch Supabase Data
+  let currentCourses = [];
+  let historyCoursesGrouped = [];
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) {
+    try {
+      // Fetch active courses
+      const { data: activeCoursesDb } = await supabase
+        .from('courses')
+        .select('*, course_modules(id, title)')
+        .eq('edu_level', eduLevel)
+        .eq('is_active', true);
+
+      // Fetch user module progress
+      const { data: userProgress } = await supabase
+        .from('user_module_progress')
+        .select('module_id')
+        .eq('user_id', session.user.id)
+        .eq('completed', true);
+
+      const completedModuleIds = new Set(userProgress?.map(p => p.module_id) || []);
+
+      currentCourses = (activeCoursesDb || []).map(c => {
+        const totalModules = c.course_modules?.length || 0;
+        const completedCount = c.course_modules?.filter(m => completedModuleIds.has(m.id)).length || 0;
+        const computedProgress = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0;
+        
+        return {
+          id: c.id,
+          title: c.title,
+          teacher: c.teacher,
+          progress: computedProgress,
+          status: computedProgress === 100 ? 'completed' : 'ongoing',
+          colorClass: c.color_class,
+          icon: c.icon,
+          tag: c.tag,
+          description: c.description
+        };
+      });
+
+      // Fetch historical courses
+      const { data: historyCoursesDb } = await supabase
+        .from('courses')
+        .select('*, course_modules(id, title)')
+        .eq('edu_level', eduLevel)
+        .eq('is_active', false);
+
+      // Group history by period & year
+      (historyCoursesDb || []).forEach(c => {
+        let periodGroup = historyCoursesGrouped.find(g => g.period === c.period && g.year === c.academic_year);
+        if (!periodGroup) {
+          periodGroup = {
+            period: c.period,
+            year: c.academic_year,
+            courses: []
+          };
+          historyCoursesGrouped.push(periodGroup);
+        }
+        periodGroup.courses.push({
+          id: c.id,
+          title: c.title,
+          teacher: c.teacher,
+          finalScore: c.final_score,
+          gradeLetter: c.grade_letter,
+          colorClass: c.color_class,
+          icon: c.icon,
+          tag: c.tag,
+          description: c.description,
+          modules: c.course_modules || []
+        });
+      });
+    } catch (e) {
+      console.error('Failed to load courses from Supabase:', e);
+    }
+  }
+
   const gridContainer = document.getElementById('courses-grid');
 
   // Render function for cards
@@ -58,8 +134,7 @@ import { getState } from './store.js';
     }
 
     courses.forEach(course => {
-      const savedProg = getState(`progress-course-${course.id}`);
-      const courseProgress = savedProg !== null ? parseInt(savedProg) : course.progress;
+      const courseProgress = course.progress;
       const isCompleted = courseProgress === 100;
       const accentTextColor = eduLevel === 'sd' ? 'text-sky-600' : (eduLevel === 'kuliah' ? 'text-indigo-600' : 'text-accent-600');
       
@@ -121,7 +196,7 @@ import { getState } from './store.js';
     }
   };
 
-  // Initial render of all courses
+  // Initial render of active courses
   renderCards(currentCourses);
 
   // ─── History Section ───────────────────────────────────────
@@ -129,7 +204,7 @@ import { getState } from './store.js';
     const historyContainer = document.getElementById('history-section');
     if (!historyContainer) return;
 
-    const periodsForLevel = historyCoursesData[eduLevel] || [];
+    const periodsForLevel = historyCoursesGrouped;
     if (periodsForLevel.length === 0) {
       historyContainer.classList.add('hidden');
       return;
@@ -173,7 +248,7 @@ import { getState } from './store.js';
       const isOpen = periodIdx === 0;
 
       // Count courses and compute avg score
-      const avgScore = Math.round(periodData.courses.reduce((sum, c) => sum + c.finalScore, 0) / periodData.courses.length);
+      const avgScore = Math.round(periodData.courses.reduce((sum, c) => sum + (c.finalScore || 0), 0) / periodData.courses.length);
 
       html += `
         <div id="${accordionId}" class="glass-panel border border-surface-200/60 rounded-2xl overflow-hidden shadow-sm">
@@ -271,7 +346,6 @@ import { getState } from './store.js';
   };
 
   renderHistorySection();
-  // ───────────────────────────────────────────────────────────
 
   // 5. Course Filtering Logic (Status Tab)
   const filterBtns = document.querySelectorAll('.filter-btn');

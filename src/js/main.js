@@ -1,21 +1,59 @@
 import { getState, setState } from './store.js';
 import { renderSidebar } from './components/sidebar.js';
 import { renderHeader } from './components/header.js';
+import { supabase } from './supabaseClient.js';
 
-(function() {
-  // 1. Session & Theme Check
-  const eduLevel = getState('edu-level');
-  const username = getState('username', 'Keane');
+(async function() {
   const currentPath = window.location.pathname;
 
-  // If session doesn't exist, redirect to login page (unless already on login page)
-  if (!eduLevel && !currentPath.includes('login')) {
+  // 1. Session & Profile Sync
+  let eduLevel = getState('edu-level');
+  let username = getState('username');
+
+  // Fetch Supabase session asynchronously
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (session) {
+    // Sync profile
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('username, edu_level, is_admin')
+      .eq('id', session.user.id)
+      .single();
+
+    if (profileData) {
+      eduLevel = profileData.edu_level;
+      username = profileData.username;
+
+      if (getState('edu-level') !== eduLevel) setState('edu-level', eduLevel);
+      if (getState('username') !== username) setState('username', username);
+      setState('is-admin', profileData.is_admin === true);
+
+      // REDIRECT FOR ADMIN: If they are admin but on a student page, send them to admin.html
+      if (profileData.is_admin === true && !currentPath.includes('admin.html') && !currentPath.includes('login.html')) {
+        window.location.href = 'admin.html';
+        return;
+      }
+    }
+  } else {
+    eduLevel = null;
+    username = null;
+    setState('edu-level', null);
+    setState('username', null);
+    setState('is-admin', false);
+  }
+
+  // Redirect to login if session is empty and not on login page
+  const isAdmin = getState('is-admin') === true;
+  if (!isAdmin && !eduLevel && !currentPath.includes('login')) {
     window.location.href = 'login.html';
     return;
   }
 
   // Apply theme attribute to html document
-  if (eduLevel) {
+  if (isAdmin) {
+    document.documentElement.setAttribute('data-theme', 'admin');
+  } else if (eduLevel) {
     document.documentElement.setAttribute('data-theme', eduLevel);
   }
 
@@ -89,16 +127,6 @@ import { renderHeader } from './components/header.js';
       if (notificationDropdown) notificationDropdown.classList.add('hidden');
     });
   }
-
-  // Quick Level Switcher
-  const levelSwitchBtns = document.querySelectorAll('[data-change-level]');
-  levelSwitchBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const newLevel = btn.getAttribute('data-change-level');
-      setState('edu-level', newLevel);
-      window.location.reload();
-    });
-  });
 
   // 5. Notification Dropdown Panel & Dynamic Rendering
   const notificationBadge = document.getElementById('notification-badge');
@@ -188,8 +216,11 @@ import { renderHeader } from './components/header.js';
   // 6. Logout Interaction
   const logoutBtns = document.querySelectorAll('#logout-btn, #dropdown-logout-btn');
   logoutBtns.forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.preventDefault();
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut();
       
       // Clear session
       setState('edu-level', null);

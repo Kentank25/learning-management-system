@@ -1,5 +1,6 @@
 import { getState, setState } from './store.js';
 import { coursesData } from './db.js';
+import { supabase } from './supabaseClient.js';
 
 // SekolahMu Buddy - Virtual Pet Belajar Adaptif
 // This module dynamically injects a floating, interactive virtual pet buddy into the page,
@@ -271,12 +272,6 @@ const fetchBuddyResponse = async (userMessage, level) => {
   const systemPrompt = buildAcademicContext(level, username);
   const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 
-  // Jika API Key tidak dikonfigurasi, langsung fallback ke keyword
-  if (!apiKey || apiKey === 'VITE_GROQ_API_KEY' || apiKey.trim() === '') {
-    console.warn('[Buddy AI] API Key Groq belum diatur di .env. Menggunakan fallback keyword.');
-    return getKeywordFallback(userMessage, level);
-  }
-
   // Add user message to in-memory history
   inMemoryHistory.push({ role: 'user', content: userMessage });
 
@@ -286,6 +281,35 @@ const fetchBuddyResponse = async (userMessage, level) => {
   }
 
   try {
+    // 1. Coba hubungi Supabase Edge Function (Proxy Aman tanpa membocorkan API Key di client)
+    try {
+      const { data: funcData, error: funcError } = await supabase.functions.invoke('chat-buddy', {
+        body: {
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...inMemoryHistory
+          ]
+        }
+      });
+
+      if (!funcError && funcData && funcData.choices && funcData.choices[0]) {
+        const reply = funcData.choices[0].message.content.trim();
+        inMemoryHistory.push({ role: 'assistant', content: reply });
+        return reply;
+      }
+      if (funcError) {
+        console.warn('[Buddy AI] Supabase Edge Function mengembalikan error, mencoba direct fallback:', funcError);
+      }
+    } catch (edgeErr) {
+      console.warn('[Buddy AI] Gagal memanggil Supabase Edge Function, mencoba direct fallback:', edgeErr);
+    }
+
+    // 2. Fallback ke pemanggilan Groq API langsung menggunakan API Key dari .env jika dikonfigurasi
+    if (!apiKey || apiKey === 'VITE_GROQ_API_KEY' || apiKey.trim() === '') {
+      console.warn('[Buddy AI] API Key Groq langsung tidak diatur di .env. Menggunakan fallback keyword.');
+      throw new Error('No Groq API Key available for fallback');
+    }
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -315,8 +339,8 @@ const fetchBuddyResponse = async (userMessage, level) => {
     return reply;
 
   } catch (error) {
-    console.warn('[Buddy AI] Gagal menghubungi Groq API, menggunakan fallback keyword:', error);
-    // Remove the last user message from history so it doesn't pollute the context when server is back online
+    console.warn('[Buddy AI] Gagal menghubungi API AI, menggunakan fallback keyword:', error);
+    // Remove the last user message from history so it doesn't pollute the context
     inMemoryHistory.pop();
     
     return getKeywordFallback(userMessage, level);

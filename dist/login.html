@@ -21,9 +21,9 @@
         document.documentElement.setAttribute('data-theme', theme);
       })();
     </script>
-    <script type="module" crossorigin src="/assets/login-o0hn19my.js"></script>
-    <link rel="modulepreload" crossorigin href="/assets/store-CN3lFKhX.js">
-    <link rel="stylesheet" crossorigin href="/assets/store-DUVF2mU5.css">
+    <script type="module" crossorigin src="/assets/login-Gh49IZCr.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/supabaseClient-BV95uWoo.js">
+    <link rel="stylesheet" crossorigin href="/assets/supabaseClient-D3Kj3cBN.css">
   </head>
   <body
     class="bg-surface-50 text-surface-900 font-sans antialiased min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
@@ -43,31 +43,31 @@
           <i data-lucide="graduation-cap" class="w-8 h-8 text-accent-500"></i>
           <span>Sekolah<span class="text-surface-900">Mu</span></span>
         </div>
-        <h1 class="text-3xl font-extrabold text-surface-900 tracking-tight font-display">
+        <h1 id="login-title" class="text-3xl font-extrabold text-surface-900 tracking-tight font-display">
           Selamat Datang
         </h1>
-        <p class="text-surface-500 text-sm font-medium">
+        <p id="login-subtitle" class="text-surface-500 text-sm font-medium">
           Masuk untuk memulai perjalanan belajarmu hari ini!
         </p>
       </div>
 
       <!-- Login Form -->
       <form id="login-form" class="space-y-5">
-        <!-- Input Username/Email -->
+        <!-- Input Email -->
         <div class="space-y-1.5">
-          <label for="username" class="text-xs font-bold uppercase tracking-wider text-surface-500"
-            >Username atau Email</label
+          <label for="email" class="text-xs font-bold uppercase tracking-wider text-surface-500"
+            >Alamat Email</label
           >
           <div class="relative flex items-center">
             <i
-              data-lucide="user"
+              data-lucide="mail"
               class="w-4 h-4 absolute left-3.5 text-surface-400"
             ></i>
             <input
-              type="text"
-              id="username"
+              type="email"
+              id="email"
               required
-              placeholder="Masukkan username Anda..."
+              placeholder="Masukkan email Anda..."
               class="w-full pl-10 pr-4 py-3 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all shadow-sm"
             />
           </div>
@@ -93,64 +93,7 @@
           </div>
         </div>
 
-        <!-- Level Selector Cards -->
-        <div class="space-y-2.5">
-          <label class="text-xs font-bold uppercase tracking-wider text-surface-500 block"
-            >Pilih Tingkat Pendidikan</label
-          >
-          <div class="grid grid-cols-3 gap-3">
-            <!-- SD Option -->
-            <button
-              type="button"
-              data-level="sd"
-              class="level-card hover-lift flex flex-col items-center justify-center p-4 border-2 border-transparent hover:border-sky-400/30 rounded-2xl bg-white/30 hover:bg-white/60 transition-all cursor-pointer group text-center"
-            >
-              <div
-                class="p-2 bg-sky-100/80 rounded-xl mb-1.5 text-sky-500 group-hover:scale-110 transition-transform"
-              >
-                <i data-lucide="smile" class="w-5 h-5"></i>
-              </div>
-              <span class="text-xs font-bold text-surface-800"
-                >SD</span
-              >
-              <span class="text-[9px] font-bold text-surface-400 mt-0.5">Sekolah Dasar</span>
-            </button>
 
-            <!-- SMK Option (Default selected) -->
-            <button
-              type="button"
-              data-level="smk"
-              class="level-card hover-lift flex flex-col items-center justify-center p-4 border-2 border-accent-500 bg-accent-50/20 rounded-2xl transition-all cursor-pointer group text-center"
-            >
-              <div
-                class="p-2 bg-accent-100/80 rounded-xl mb-1.5 text-accent-500 group-hover:scale-110 transition-transform"
-              >
-                <i data-lucide="book-open" class="w-5 h-5"></i>
-              </div>
-              <span class="text-xs font-bold text-surface-800"
-                >SMK</span
-              >
-              <span class="text-[9px] font-bold text-surface-400 mt-0.5">SMP/SMA/K</span>
-            </button>
-
-            <!-- Kuliah Option -->
-            <button
-              type="button"
-              data-level="kuliah"
-              class="level-card hover-lift flex flex-col items-center justify-center p-4 border-2 border-transparent hover:border-indigo-400/30 rounded-2xl bg-white/30 hover:bg-white/60 transition-all cursor-pointer group text-center"
-            >
-              <div
-                class="p-2 bg-indigo-100/80 rounded-xl mb-1.5 text-indigo-500 group-hover:scale-110 transition-transform"
-              >
-                <i data-lucide="graduation-cap" class="w-5 h-5"></i>
-              </div>
-              <span class="text-xs font-bold text-surface-800"
-                >Kuliah</span
-              >
-              <span class="text-[9px] font-bold text-surface-400 mt-0.5">Kampus</span>
-            </button>
-          </div>
-        </div>
 
         <!-- Submit Button -->
         <button
@@ -158,10 +101,24 @@
           id="submit-btn"
           class="w-full py-3.5 bg-accent-500 hover:bg-accent-600 active:scale-98 text-white rounded-xl font-bold shadow-lg shadow-accent-500/20 hover:shadow-accent-500/30 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer mt-6"
         >
-          <span>Masuk Sekarang</span>
-          <i data-lucide="arrow-right" class="w-4 h-4"></i>
+          <span id="submit-btn-text">Masuk Sekarang</span>
+          <i id="submit-btn-icon" data-lucide="arrow-right" class="w-4 h-4"></i>
         </button>
       </form>
+
+      <!-- Toggle Mode -->
+      <div class="text-center pt-4 border-t border-surface-100/50">
+        <p class="text-sm text-surface-500 font-medium">
+          <span id="toggle-text">Belum punya akun?</span>
+          <button
+            id="toggle-mode-btn"
+            type="button"
+            class="text-accent-500 hover:text-accent-600 font-bold ml-1 transition-colors outline-none cursor-pointer"
+          >
+            Daftar Baru
+          </button>
+        </p>
+      </div>
     </div>
 
     <!-- Script to render Lucide icons -->

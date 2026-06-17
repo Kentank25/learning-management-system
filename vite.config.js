@@ -16,6 +16,7 @@ export default defineConfig({
         courseDetail: resolve(__dirname, 'course-detail.html'),
         grades: resolve(__dirname, 'grades.html'),
         files: resolve(__dirname, 'files.html'),
+        admin: resolve(__dirname, 'admin.html'),
       }
     }
   }

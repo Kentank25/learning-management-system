@@ -1,7 +1,8 @@
-import { sidebarTexts, coursesData, historyCoursesData } from './db.js';
+import { sidebarTexts } from './db.js';
 import { getState, setState } from './store.js';
+import { supabase } from './supabaseClient.js';
 
-(function() {
+(async function() {
   const eduLevel = getState('edu-level', 'smk');
   const username = getState('username', 'Keane');
 
@@ -10,22 +11,113 @@ import { getState, setState } from './store.js';
   const courseId = parseInt(urlParams.get('id')) || 1;
   const isArchiveMode = urlParams.get('archive') === '1';
 
-  // 2. Fetch Course Data (active or archive)
-  let course;
+  // Get active session
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    window.location.href = 'login.html';
+    return;
+  }
+  const userId = session.user.id;
+
+  // 2. Fetch Course Data (active or archive) from Supabase
+  let course = null;
   let archivePeriodInfo = null;
-  if (isArchiveMode) {
-    const periodsForLevel = historyCoursesData[eduLevel] || [];
-    for (const period of periodsForLevel) {
-      const found = period.courses.find(c => c.id === courseId);
-      if (found) {
-        course = found;
-        archivePeriodInfo = { period: period.period, year: period.year };
-        break;
+  let completedModuleIds = new Set();
+  let quizAttemptsList = [];
+  let taskSubmissionsList = [];
+  let forumMessages = [];
+
+  try {
+    if (isArchiveMode) {
+      // Fetch archived course
+      const { data: c } = await supabase
+        .from('courses')
+        .select('*, course_modules(*)')
+        .eq('id', courseId)
+        .eq('is_active', false)
+        .single();
+      
+      if (c) {
+        course = {
+          ...c,
+          modules: (c.course_modules || []).sort((a, b) => a.sequence_number - b.sequence_number)
+        };
+        archivePeriodInfo = { period: c.period, year: c.academic_year };
+      }
+    } else {
+      // Fetch active course
+      const { data: c } = await supabase
+        .from('courses')
+        .select(`
+          *,
+          course_modules(*),
+          course_quizzes(*),
+          course_tasks(*)
+        `)
+        .eq('id', courseId)
+        .eq('is_active', true)
+        .single();
+      
+      if (c) {
+        course = {
+          ...c,
+          modules: (c.course_modules || []).sort((a, b) => a.sequence_number - b.sequence_number),
+          kuis: c.course_quizzes || [],
+          tasks: c.course_tasks || []
+        };
+
+        // Fetch user module progress
+        const { data: userProgress } = await supabase
+          .from('user_module_progress')
+          .select('module_id')
+          .eq('user_id', userId)
+          .eq('completed', true);
+        if (userProgress) {
+          completedModuleIds = new Set(userProgress.map(p => p.module_id));
+        }
+
+        // Map completed state locally
+        course.modules.forEach(m => {
+          m.completed = completedModuleIds.has(m.id);
+        });
+
+        // Fetch quiz attempts
+        const { data: attempts } = await supabase
+          .from('user_quiz_attempts')
+          .select('*')
+          .eq('user_id', userId);
+        if (attempts) {
+          quizAttemptsList = attempts;
+        }
+
+        // Fetch task submissions
+        const { data: subs } = await supabase
+          .from('user_task_submissions')
+          .select('*')
+          .eq('user_id', userId);
+        if (subs) {
+          taskSubmissionsList = subs;
+        }
+
+        // Fetch forum messages
+        const { data: msgs } = await supabase
+          .from('forum_messages')
+          .select('*')
+          .eq('course_id', course.id)
+          .order('created_at', { ascending: true });
+        
+        if (msgs) {
+          forumMessages = msgs.map(msg => ({
+            name: msg.sender_name,
+            role: msg.sender_role,
+            text: msg.message_text,
+            time: new Date(msg.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB'
+          }));
+        }
       }
     }
-  } else {
-    const activeLevelCourses = coursesData[eduLevel] || [];
-    course = activeLevelCourses.find(c => c.id === courseId) || activeLevelCourses[0];
+  } catch (e) {
+    console.error('Error fetching course detail from Supabase:', e);
   }
 
   if (!course) {
@@ -47,8 +139,6 @@ import { getState, setState } from './store.js';
   }
 
   // ───── ARCHIVE MODE ─────────────────────────────────
-  // If viewing an archived course, render simplified read-only layout
-  // and return early — none of the interactive code below runs.
   if (isArchiveMode && archivePeriodInfo) {
     const gradeColorMap = {
       A: { badge: 'bg-emerald-100 text-emerald-700 border-emerald-300', bar: 'bg-emerald-500' },
@@ -68,7 +158,6 @@ import { getState, setState } from './store.js';
     const courseBanner = document.getElementById('course-banner');
     if (courseBanner) {
       courseBanner.className = `${accentColorBanner} rounded-3xl p-6 sm:p-8 text-white shadow-xl ${accentBorderBanner} border relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px] opacity-90`;
-      // Insert archive strip above banner content
       const archiveStrip = document.createElement('div');
       archiveStrip.className = 'absolute top-0 inset-x-0 bg-amber-500/80 backdrop-blur-sm text-white text-xs font-bold flex items-center justify-center gap-2 py-1.5';
       archiveStrip.innerHTML = `<i data-lucide="archive" class="w-3.5 h-3.5"></i> Arsip Akademik &mdash; ${archivePeriodInfo.period} &bull; ${archivePeriodInfo.year}`;
@@ -84,17 +173,13 @@ import { getState, setState } from './store.js';
     if (courseTeacherEl) courseTeacherEl.innerHTML = `<i data-lucide="user" class="w-4 h-4"></i> Pengajar: ${course.teacher}`;
     if (courseDescEl) courseDescEl.textContent = course.description;
 
-    // --- Archive layout: replace tabs + right column with archive content ---
     const tabsNavEl = document.getElementById('tabs-navigation');
     const tabContentEl = document.getElementById('tab-content');
-    const infoWidget = document.querySelector('.space-y-6 .glass-panel'); // right col first widget
 
-    // Replace tab nav with a section label
     if (tabsNavEl) {
       tabsNavEl.closest('.glass-panel').outerHTML = '';
     }
 
-    // Replace tab content with archive module checklist
     if (tabContentEl) {
       const modulesHtml = course.modules.map(m => `
         <div class="flex items-start gap-3 p-3 rounded-xl bg-emerald-50/60 border border-emerald-100">
@@ -118,79 +203,31 @@ import { getState, setState } from './store.js';
       `;
     }
 
-    // Replace right column (info widget) with archive score widget
-    const rightCol = document.querySelector('.lg\\:col-span-2')?.nextElementSibling;
-    if (rightCol) {
-      rightCol.innerHTML = `
-        <div class="glass-panel rounded-2xl p-5 shadow-sm space-y-4">
-          <h3 class="font-bold text-surface-900 text-base border-b border-surface-100/50 pb-3 font-display">Ringkasan Nilai</h3>
-          <div class="flex flex-col items-center py-4">
-            <span class="text-5xl font-black text-surface-900">${course.finalScore}</span>
-            <span class="text-sm text-surface-500 mt-1">Nilai Akhir</span>
-            <span class="mt-3 text-xl font-extrabold px-4 py-1 rounded-full border-2 ${grade.badge}">
-              Predikat ${course.gradeLetter}
-            </span>
-          </div>
-          <div class="border-t border-surface-100 pt-4 space-y-3">
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-surface-500 flex items-center gap-2">
-                <i data-lucide="award" class="w-4 h-4 text-emerald-500"></i>Status
-              </span>
-              <span class="font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full text-xs">Lulus ✅</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-surface-500 flex items-center gap-2">
-                <i data-lucide="calendar" class="w-4 h-4 text-surface-400"></i>Periode
-              </span>
-              <span class="font-semibold text-surface-900 text-xs">${archivePeriodInfo.period}</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-surface-500 flex items-center gap-2">
-                <i data-lucide="book-marked" class="w-4 h-4 text-surface-400"></i>Tahun Ajaran
-              </span>
-              <span class="font-semibold text-surface-900 text-xs">${archivePeriodInfo.year}</span>
-            </div>
-            <div class="flex items-center justify-between text-sm">
-              <span class="text-surface-500 flex items-center gap-2">
-                <i data-lucide="book-open-check" class="w-4 h-4 text-surface-400"></i>Total Modul
-              </span>
-              <span class="font-semibold text-surface-900 text-xs">${course.modules.length} modul selesai</span>
-            </div>
-          </div>
-          <!-- Score bar -->
-          <div class="pt-2">
-            <div class="flex justify-between text-xs font-semibold text-surface-600 mb-1.5">
-              <span>Pencapaian Nilai</span>
-              <span class="font-bold">${course.finalScore}/100</span>
-            </div>
-            <div class="w-full bg-surface-100 rounded-full h-2">
-              <div class="${grade.bar} h-2 rounded-full" style="width:${course.finalScore}%"></div>
-            </div>
-          </div>
-        </div>
-      `;
+    const infoStatus = document.getElementById('info-status');
+    const infoModulesCount = document.getElementById('info-modules-count');
+    const infoProgressPct = document.getElementById('info-progress-pct');
+    const infoProgressBar = document.getElementById('info-progress-bar');
+    const infoWeight = document.getElementById('info-weight');
+
+    if (infoStatus) {
+      infoStatus.className = `border ${grade.badge} font-bold text-xs px-2.5 py-0.5 rounded-full`;
+      infoStatus.textContent = `Nilai Akhir: ${course.finalScore} (${course.gradeLetter})`;
+    }
+    if (infoModulesCount) infoModulesCount.textContent = `${course.modules.length} / ${course.modules.length} Modul`;
+    if (infoProgressPct) infoProgressPct.textContent = `100%`;
+    if (infoProgressBar) {
+      infoProgressBar.className = `${grade.bar} h-2 rounded-full`;
+      infoProgressBar.style.width = '100%';
+    }
+    if (infoWeight) {
+      infoWeight.innerHTML = `<span class="text-surface-500 flex items-center gap-2"><i data-lucide="award" class="w-4.5 h-4.5 text-amber-500"></i>Arsip Periode</span> <span class="font-bold text-surface-900">${archivePeriodInfo.period}</span>`;
     }
 
     if (typeof lucide !== 'undefined') lucide.createIcons();
-    return; // ← EXIT: skip all interactive code below
+    return;
   }
-  // ───── END ARCHIVE MODE ──────────────────────────────
 
-  // 4. Sidebar Navigation Text Mapping
-  const currentSidebar = sidebarTexts[eduLevel];
-  const navDashboardText = document.getElementById('nav-dashboard-text');
-  const navCoursesText = document.getElementById('nav-courses-text');
-  const navCalendarText = document.getElementById('nav-calendar-text');
-  const navGradesText = document.getElementById('nav-grades-text');
-  const navFilesText = document.getElementById('nav-files-text');
-
-  if (navDashboardText) navDashboardText.textContent = currentSidebar.dashboard;
-  if (navCoursesText) navCoursesText.textContent = currentSidebar.courses;
-  if (navCalendarText) navCalendarText.textContent = currentSidebar.calendar;
-  if (navGradesText) navGradesText.textContent = currentSidebar.grades;
-  if (navFilesText) navFilesText.textContent = currentSidebar.files;
-
-  // 5. Adapt Visual Theme (Gradients and badging)
+  // ───── ACTIVE MODE ──────────────────────────────────
   const courseBanner = document.getElementById('course-banner');
   const courseBadge = document.getElementById('course-badge');
   const courseTitleEl = document.getElementById('course-title');
@@ -208,13 +245,11 @@ import { getState, setState } from './store.js';
   const kuliahAcademicWidget = document.getElementById('kuliah-academic-widget');
   const capIcon = document.querySelector('aside .text-accent-600');
 
-  // Load saved dynamic progress/stars
-  const savedProgress = getState(`progress-course-${course.id}`);
-  const courseProgressVal = savedProgress !== null ? parseInt(savedProgress) : course.progress;
-  
-  const savedStars = getState(`kuis-stars-${course.id}`) || 0;
+  // Load saved stars
+  const quizAttempt = quizAttemptsList.find(a => a.course_id === course.id);
+  const savedStars = quizAttempt ? quizAttempt.stars_earned : 0;
 
-  // Apply colors and layout configs
+  // Apply colors and layout configs based on level
   if (eduLevel === 'sd') {
     if (courseBanner) courseBanner.className = 'bg-gradient-sd rounded-3xl p-6 sm:p-8 text-white shadow-lg border border-sky-300 relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px] hover-lift';
     if (courseBadge) courseBadge.textContent = 'Sekolah Dasar (SD)';
@@ -224,17 +259,10 @@ import { getState, setState } from './store.js';
       if (sdStarsCountLabel) sdStarsCountLabel.textContent = `${savedStars} Bintang ⭐`;
     }
     if (infoStatus) {
-      if (courseProgressVal === 100) {
-        infoStatus.className = 'font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full text-xs';
-        infoStatus.textContent = 'Selesai 🏆';
-      } else {
-        infoStatus.className = 'font-semibold text-sky-600 bg-sky-50 px-2.5 py-0.5 rounded-full text-xs';
-        infoStatus.textContent = 'Sedang Belajar';
-      }
+      infoStatus.className = 'font-semibold text-sky-600 bg-sky-50 px-2.5 py-0.5 rounded-full text-xs';
+      infoStatus.textContent = 'Sedang Belajar';
     }
-    if (infoProgressBar) {
-      infoProgressBar.className = 'bg-sky-400 h-2 rounded-full';
-    }
+    if (infoProgressBar) infoProgressBar.className = 'bg-sky-400 h-2 rounded-full';
     if (infoProgressPct) infoProgressPct.className = 'text-sky-500 font-bold';
     if (capIcon) {
       capIcon.classList.remove('text-accent-600');
@@ -242,23 +270,16 @@ import { getState, setState } from './store.js';
     }
   } else if (eduLevel === 'kuliah') {
     if (courseBanner) courseBanner.className = 'bg-gradient-kuliah rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-indigo-500 relative overflow-hidden flex flex-col justify-end min-h-[160px] sm:min-h-[200px] hover-lift';
-    if (courseBadge) courseBadge.textContent = course.tag; // SKS indicator
+    if (courseBadge) courseBadge.textContent = course.tag;
     if (infoWeight) {
       infoWeight.innerHTML = `<span class="text-surface-500 flex items-center gap-2"><i data-lucide="award" class="w-4.5 h-4.5 text-indigo-500"></i>Beban Kuliah</span> <span class="font-bold text-surface-900">${course.tag}</span>`;
     }
     if (kuliahAcademicWidget) kuliahAcademicWidget.classList.remove('hidden');
     if (infoStatus) {
-      if (courseProgressVal === 100) {
-        infoStatus.className = 'font-semibold text-green-600 bg-green-50 px-2.5 py-0.5 rounded-full text-xs';
-        infoStatus.textContent = 'Lulus';
-      } else {
-        infoStatus.className = 'font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full text-xs';
-        infoStatus.textContent = 'Aktif';
-      }
+      infoStatus.className = 'font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full text-xs';
+      infoStatus.textContent = 'Aktif';
     }
-    if (infoProgressBar) {
-      infoProgressBar.className = 'bg-indigo-600 h-2 rounded-full';
-    }
+    if (infoProgressBar) infoProgressBar.className = 'bg-indigo-600 h-2 rounded-full';
     if (infoProgressPct) infoProgressPct.className = 'text-indigo-600 font-bold';
     if (capIcon) {
       capIcon.classList.remove('text-accent-600');
@@ -272,17 +293,10 @@ import { getState, setState } from './store.js';
       infoWeight.innerHTML = `<span class="text-surface-500 flex items-center gap-2"><i data-lucide="award" class="w-4.5 h-4.5 text-amber-500"></i>Kelas</span> <span class="font-bold text-surface-900">${course.tag}</span>`;
     }
     if (infoStatus) {
-      if (courseProgressVal === 100) {
-        infoStatus.className = 'font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full text-xs';
-        infoStatus.textContent = 'Lulus Kompetensi';
-      } else {
-        infoStatus.className = 'font-semibold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full text-xs';
-        infoStatus.textContent = 'Belajar Aktif';
-      }
+      infoStatus.className = 'font-semibold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full text-xs';
+      infoStatus.textContent = 'Belajar Aktif';
     }
-    if (infoProgressBar) {
-      infoProgressBar.className = 'bg-amber-500 h-2 rounded-full';
-    }
+    if (infoProgressBar) infoProgressBar.className = 'bg-amber-500 h-2 rounded-full';
     if (infoProgressPct) infoProgressPct.className = 'text-amber-600 font-bold';
     if (capIcon) {
       capIcon.classList.remove('text-accent-600');
@@ -296,30 +310,54 @@ import { getState, setState } from './store.js';
   if (courseDescEl) courseDescEl.textContent = course.description;
 
   const renderHeaderProgress = () => {
-    const modules = getSavedModules();
-    const completedCount = modules.filter(m => m.completed).length;
-    const computedPct = Math.round((completedCount / modules.length) * 100);
+    const completedCount = course.modules.filter(m => m.completed).length;
+    const computedPct = course.modules.length > 0 ? Math.round((completedCount / course.modules.length) * 100) : 0;
 
-    if (infoModulesCount) infoModulesCount.textContent = `${completedCount} / ${modules.length} Modul`;
+    if (infoModulesCount) infoModulesCount.textContent = `${completedCount} / ${course.modules.length} Modul`;
     if (infoProgressPct) infoProgressPct.textContent = `${computedPct}%`;
     if (infoProgressBar) infoProgressBar.style.width = `${computedPct}%`;
 
+    if (infoStatus) {
+      if (computedPct === 100) {
+        infoStatus.className = 'font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full text-xs';
+        infoStatus.textContent = eduLevel === 'sd' ? 'Selesai 🏆' : (eduLevel === 'kuliah' ? 'Lulus' : 'Lulus Kompetensi');
+      } else {
+        if (eduLevel === 'sd') {
+          infoStatus.className = 'font-semibold text-sky-600 bg-sky-50 px-2.5 py-0.5 rounded-full text-xs';
+          infoStatus.textContent = 'Sedang Belajar';
+        } else if (eduLevel === 'kuliah') {
+          infoStatus.className = 'font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full text-xs';
+          infoStatus.textContent = 'Aktif';
+        } else {
+          infoStatus.className = 'font-semibold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full text-xs';
+          infoStatus.textContent = 'Belajar Aktif';
+        }
+      }
+    }
+
+    // Bridge state so other pages know
     setState(`progress-course-${course.id}`, computedPct);
   };
 
-  // Local storage modules state to enable completion toggles!
-  const getSavedModules = () => {
-    const key = `modules-course-${course.id}`;
-    const raw = getState(key);
-    if (raw) return raw;
+  const saveModulesState = async (moduleId, isCompleted) => {
+    // Upsert module completion to Supabase
+    try {
+      await supabase
+        .from('user_module_progress')
+        .upsert({
+          user_id: userId,
+          module_id: moduleId,
+          completed: isCompleted,
+          completed_at: isCompleted ? new Date().toISOString() : null
+        }, { onConflict: 'user_id,module_id' });
+    } catch (e) {
+      console.error('Failed to update module completion:', e);
+    }
     
-    // Save defaults
-    setState(key, course.modules);
-    return course.modules;
-  };
+    // Update local variable
+    const mod = course.modules.find(m => m.id === moduleId);
+    if (mod) mod.completed = isCompleted;
 
-  const saveModulesState = (modules) => {
-    setState(`modules-course-${course.id}`, modules);
     renderHeaderProgress();
   };
 
@@ -348,39 +386,94 @@ import { getState, setState } from './store.js';
   const renderTabsNav = () => {
     if (!tabsNav) return;
     tabsNav.innerHTML = '';
-    
-    const activeBtnClass = eduLevel === 'sd' 
-      ? 'bg-sky-100 text-sky-700' 
-      : (eduLevel === 'kuliah' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700');
 
-    tabConfigs[eduLevel].forEach(tab => {
+    const configs = tabConfigs[eduLevel] || [];
+    configs.forEach(tab => {
       const isSelected = tab.id === activeTab;
-      const btn = document.createElement('button');
-      btn.className = `flex-1 py-2 text-center rounded-lg cursor-pointer transition-all ${isSelected ? activeBtnClass : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'}`;
-      btn.textContent = tab.label;
+      let activeClass = '';
       
+      if (isSelected) {
+        activeClass = eduLevel === 'sd' ? 'bg-sky-500 text-white shadow-sm border-transparent' : (eduLevel === 'kuliah' ? 'bg-indigo-600 text-white shadow-sm border-transparent' : 'bg-accent-500 text-surface-900 shadow-sm border-transparent');
+      } else {
+        activeClass = 'bg-white hover:bg-surface-50 text-surface-600 border-surface-200';
+      }
+
+      const btn = document.createElement('button');
+      btn.className = `px-4 py-2 border rounded-xl text-xs font-bold transition-all cursor-pointer ${activeClass}`;
+      btn.textContent = tab.label;
       btn.addEventListener('click', () => {
         activeTab = tab.id;
         renderTabsNav();
         renderTabContent();
       });
-
       tabsNav.appendChild(btn);
     });
   };
 
-  // Render specific tab contents
+  // Setup Forum Realtime Subscription
+  if (eduLevel === 'kuliah') {
+    supabase
+      .channel(`forum-course-${course.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'forum_messages',
+        filter: `course_id=eq.${course.id}`
+      }, (payload) => {
+        const msg = payload.new;
+        const timeStr = new Date(msg.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
+        
+        // Push message if not present
+        forumMessages.push({
+          name: msg.sender_name,
+          role: msg.sender_role,
+          text: msg.message_text,
+          time: timeStr
+        });
+
+        if (activeTab === 'diskusi') {
+          renderForumThread();
+        }
+      })
+      .subscribe();
+  }
+
+  const renderForumThread = () => {
+    const thread = document.getElementById('forum-thread');
+    if (!thread) return;
+
+    thread.innerHTML = forumMessages.map(msg => {
+      const isTeacher = msg.role === 'Pengajar';
+      const roleBadge = isTeacher 
+        ? 'bg-red-50 text-red-600 border-red-100'
+        : 'bg-indigo-50 text-indigo-600 border-indigo-100';
+
+      return `
+        <div class="p-3 bg-surface-50 rounded-xl space-y-1.5 border border-surface-100">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-xs text-surface-900">${msg.name}</span>
+              <span class="inline-flex items-center text-[9px] font-bold border px-1.5 py-0.5 rounded-full ${roleBadge}">${msg.role}</span>
+            </div>
+            <span class="text-[10px] text-surface-400 font-semibold">${msg.time}</span>
+          </div>
+          <p class="text-xs text-surface-700 leading-relaxed">${msg.text}</p>
+        </div>
+      `;
+    }).join('');
+
+    thread.scrollTop = thread.scrollHeight;
+  };
+
   const renderTabContent = () => {
     if (!tabContent) return;
     tabContent.innerHTML = '';
 
-    const listColor = eduLevel === 'sd' ? 'group-hover:text-sky-500' : (eduLevel === 'kuliah' ? 'group-hover:text-indigo-600' : 'group-hover:text-amber-600');
-    const checkedColor = eduLevel === 'sd' ? 'text-sky-500 bg-sky-50' : (eduLevel === 'kuliah' ? 'text-indigo-600 bg-indigo-50' : 'text-amber-500 bg-amber-50');
+    const listColor = eduLevel === 'sd' ? 'text-sky-600' : (eduLevel === 'kuliah' ? 'text-indigo-600' : 'text-accent-600');
+    const checkedColor = eduLevel === 'sd' ? 'text-sky-500 hover:text-sky-600' : (eduLevel === 'kuliah' ? 'text-indigo-600 hover:text-indigo-700' : 'text-emerald-500 hover:text-emerald-600');
 
     // TAB 1: MODUL/SILABUS
     if (activeTab === 'modul') {
-      const savedModules = getSavedModules();
-      
       let html = `<div class="bg-white border border-surface-200 rounded-2xl p-5 shadow-sm space-y-4">
         <h3 class="font-bold text-surface-900 text-base flex items-center justify-between">
           <span>Daftar Materi Pembelajaran</span>
@@ -388,7 +481,7 @@ import { getState, setState } from './store.js';
         </h3>
         <div class="space-y-2.5">`;
 
-      savedModules.forEach((m, idx) => {
+      course.modules.forEach((m, idx) => {
         const checkIcon = m.completed ? 'check-circle-2' : 'circle';
         const checkClass = m.completed ? checkedColor : 'text-surface-300 hover:text-surface-500';
         
@@ -398,10 +491,10 @@ import { getState, setState } from './store.js';
               <span class="w-7 h-7 bg-surface-100 text-surface-600 flex items-center justify-center font-bold text-xs rounded-lg">${idx + 1}</span>
               <div>
                 <h4 class="font-bold text-sm text-surface-900 group-hover:${listColor} transition-colors line-clamp-1">${m.title}</h4>
-                <p class="text-xs text-surface-400 mt-0.5 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${m.dur}</p>
+                <p class="text-xs text-surface-400 mt-0.5 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${m.duration || '15 menit'}</p>
               </div>
             </div>
-            <button data-mod-idx="${idx}" class="toggle-module-btn p-1 ${checkClass} rounded-lg transition-colors cursor-pointer">
+            <button data-mod-id="${m.id}" class="toggle-module-btn p-1 ${checkClass} rounded-lg transition-colors cursor-pointer border-none bg-transparent">
               <i data-lucide="${checkIcon}" class="w-5 h-5"></i>
             </button>
           </div>
@@ -413,12 +506,14 @@ import { getState, setState } from './store.js';
 
       // Add click listeners to checkbox buttons
       document.querySelectorAll('.toggle-module-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = parseInt(btn.getAttribute('data-mod-idx'));
-          const currentModules = getSavedModules();
-          currentModules[idx].completed = !currentModules[idx].completed;
-          saveModulesState(currentModules);
-          renderTabContent();
+        btn.addEventListener('click', async () => {
+          const modId = parseInt(btn.getAttribute('data-mod-id'));
+          const mod = course.modules.find(m => m.id === modId);
+          if (mod) {
+            const isCompleted = !mod.completed;
+            await saveModulesState(modId, isCompleted);
+            renderTabContent();
+          }
         });
       });
     }
@@ -426,14 +521,20 @@ import { getState, setState } from './store.js';
     // TAB 2: TUGAS/DROPBOX (SMK & Kuliah)
     else if (activeTab === 'tugas') {
       const task = course.tasks && course.tasks[0] ? course.tasks[0] : {
+        id: 99,
         title: 'Tugas Proyek Mandiri Kelas',
-        due: 'Besok, 23:59 WIB',
-        pts: 100
+        due_date: new Date(Date.now() + 86400000).toISOString(),
+        max_points: 100
       };
 
-      const taskKey = `tugas-status-${course.id}`;
-      const isSubmitted = getState(taskKey) === 'true' || getState(taskKey) === true;
+      const formattedDueDate = new Date(task.due_date).toLocaleDateString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }) + ', 23:59 WIB';
 
+      const isSubmitted = taskSubmissionsList.some(s => s.task_id === task.id && s.completed);
       const fileInputId = `file-uploader-${course.id}`;
       
       let uploadStatusHTML = '';
@@ -443,13 +544,12 @@ import { getState, setState } from './store.js';
             <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
             <div>
               <p class="font-bold text-emerald-950">Berkas Tugas Sudah Dikumpulkan!</p>
-              <p class="text-xs text-emerald-700 mt-0.5">Dikirim pada: Baru saja</p>
+              <p class="text-xs text-emerald-700 mt-0.5">Status: Terkirim</p>
             </div>
           </div>
         `;
       } else {
         const themeBtnColor = eduLevel === 'kuliah' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-amber-500 hover:bg-amber-600';
-        const focusRing = eduLevel === 'kuliah' ? 'focus:ring-indigo-200' : 'focus:ring-amber-200';
         uploadStatusHTML = `
           <div id="upload-panel" class="space-y-4">
             <!-- Drag Area -->
@@ -457,7 +557,6 @@ import { getState, setState } from './store.js';
               <i data-lucide="upload-cloud" class="w-10 h-10 text-surface-400"></i>
               <span class="text-sm font-semibold text-surface-800">Pilih Berkas Tugas Anda</span>
               <span class="text-xs text-surface-400 mt-0.5">PDF, ZIP, atau RAR (Maks. 20MB)</span>
-              <!-- Mock Input File -->
               <input type="file" id="${fileInputId}" class="hidden" />
               <div id="selected-file-label" class="hidden text-xs text-emerald-600 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-lg font-medium">
                 Nama File: skema-toko-online.zip
@@ -468,7 +567,7 @@ import { getState, setState } from './store.js';
             <button
               id="submit-task-btn"
               disabled
-              class="w-full py-2.5 bg-surface-200 text-surface-400 cursor-not-allowed font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 active:scale-98"
+              class="w-full py-2.5 bg-surface-200 text-surface-400 cursor-not-allowed font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 active:scale-98 border-none"
             >
               Kumpulkan Berkas
             </button>
@@ -493,11 +592,11 @@ import { getState, setState } from './store.js';
             <div>
               <span class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-50 text-orange-600"><i data-lucide="clock" class="w-2.5 h-2.5"></i> Tugas Proyek</span>
               <h3 class="font-bold text-surface-900 text-base mt-2">${task.title}</h3>
-              <p class="text-xs text-surface-500 mt-1 flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Batas Pengumpulan: <strong>${task.due}</strong></p>
+              <p class="text-xs text-surface-500 mt-1 flex items-center gap-1.5"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Batas Pengumpulan: <strong>${formattedDueDate}</strong></p>
             </div>
             <div class="text-right">
               <span class="text-xs text-surface-500 block">Bobot Nilai</span>
-              <span class="font-extrabold text-lg text-surface-900">${task.pts} <span class="text-xs font-medium text-surface-400">Poin</span></span>
+              <span class="font-extrabold text-lg text-surface-900">${task.max_points || 100} <span class="text-xs font-medium text-surface-400">Poin</span></span>
             </div>
           </div>
 
@@ -510,29 +609,25 @@ import { getState, setState } from './store.js';
       `;
       tabContent.innerHTML = html;
 
-      // Handle Mock drag drop zone clicking
       const dragDropZone = document.getElementById('drag-drop-zone');
       const submitTaskBtn = document.getElementById('submit-task-btn');
       const fileLabel = document.getElementById('selected-file-label');
 
       if (dragDropZone) {
         dragDropZone.addEventListener('click', () => {
-          // Mocking selecting a file directly
           if (fileLabel) {
             fileLabel.classList.remove('hidden');
             dragDropZone.classList.add('border-emerald-300', 'bg-emerald-50/10');
             
-            // Enable Submit Button
             if (submitTaskBtn) {
               const themeBtnColor = eduLevel === 'kuliah' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-amber-500 hover:bg-amber-600';
-              submitTaskBtn.className = `w-full py-2.5 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 active:scale-98 cursor-pointer ${themeBtnColor}`;
+              submitTaskBtn.className = `w-full py-2.5 text-white font-semibold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 active:scale-98 cursor-pointer border-none ${themeBtnColor}`;
               submitTaskBtn.removeAttribute('disabled');
             }
           }
         });
       }
 
-      // Handle Task Submission
       if (submitTaskBtn) {
         submitTaskBtn.addEventListener('click', () => {
           const uploadPanel = document.getElementById('upload-panel');
@@ -545,7 +640,7 @@ import { getState, setState } from './store.js';
             progressPanel.classList.remove('hidden');
 
             let count = 0;
-            const interval = setInterval(() => {
+            const interval = setInterval(async () => {
               count += 10;
               if (progressBar) progressBar.style.width = `${count}%`;
               if (progressPct) progressPct.textContent = `${count}%`;
@@ -553,10 +648,23 @@ import { getState, setState } from './store.js';
               if (count >= 100) {
                 clearInterval(interval);
                 
-                // Save task submission to localStorage
-                setState(taskKey, 'true');
+                try {
+                  // Upsert to Supabase
+                  await supabase
+                    .from('user_task_submissions')
+                    .upsert({
+                      user_id: userId,
+                      task_id: task.id,
+                      completed: true,
+                      submitted_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,task_id' });
+
+                  // Update local list
+                  taskSubmissionsList.push({ task_id: task.id, completed: true });
+                } catch (e) {
+                  console.error('Failed to submit task to Supabase:', e);
+                }
                 
-                // Re-render
                 renderTabContent();
               }
             }, 150);
@@ -585,11 +693,11 @@ import { getState, setState } from './store.js';
       quizList.forEach((q, idx) => {
         quizHTML += `
           <div class="space-y-3 p-4 border border-surface-100 rounded-2xl bg-surface-50/20">
-            <h4 class="font-bold text-sm text-surface-900">${idx + 1}. ${q.q}</h4>
+            <h4 class="font-bold text-sm text-surface-900">${idx + 1}. ${q.question}</h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         `;
 
-        q.a.forEach((ans, oIdx) => {
+        q.options.forEach((ans, oIdx) => {
           quizHTML += `
             <label class="option-label flex items-center gap-3 p-3 bg-white hover:bg-sky-50/50 border border-surface-200 hover:border-sky-300 rounded-xl cursor-pointer transition-all text-xs font-semibold">
               <input type="radio" name="quiz-q-${q.id}" value="${oIdx}" class="accent-sky-500 w-4 h-4 cursor-pointer" />
@@ -606,7 +714,7 @@ import { getState, setState } from './store.js';
           
           <button
             id="submit-quiz-btn"
-            class="w-full py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 mt-2"
+            class="w-full py-3 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-sm transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-98 mt-2 border-none"
           >
             <i data-lucide="sparkles" class="w-4.5 h-4.5"></i>
             Periksa Hasil Kuis Ceria!
@@ -616,10 +724,9 @@ import { getState, setState } from './store.js';
       
       tabContent.innerHTML = quizHTML;
 
-      // Handle Quiz Submission
       const submitQuizBtn = document.getElementById('submit-quiz-btn');
       if (submitQuizBtn) {
-        submitQuizBtn.addEventListener('click', () => {
+        submitQuizBtn.addEventListener('click', async () => {
           let allCorrect = true;
           let unanswered = false;
 
@@ -629,7 +736,7 @@ import { getState, setState } from './store.js';
               unanswered = true;
             } else {
               const ansVal = parseInt(selected.value);
-              if (ansVal !== q.correct) {
+              if (ansVal !== q.correct_option_index) {
                 allCorrect = false;
               }
             }
@@ -641,7 +748,6 @@ import { getState, setState } from './store.js';
           }
 
           if (allCorrect) {
-            // Perfect score! CONFETTI BLAST!
             if (typeof confetti !== 'undefined') {
               confetti({
                 particleCount: 150,
@@ -650,9 +756,19 @@ import { getState, setState } from './store.js';
               });
             }
 
-            // Award 10 stars
-            setState(`kuis-stars-${course.id}`, 10);
-            
+            try {
+              // Upsert attempt to Supabase
+              await supabase
+                .from('user_quiz_attempts')
+                .upsert({
+                  user_id: userId,
+                  course_id: course.id,
+                  stars_earned: 10
+                }, { onConflict: 'user_id,course_id' });
+            } catch (e) {
+              console.error('Failed to submit quiz attempt to Supabase:', e);
+            }
+
             // Update widget
             if (sdStarWidget && sdStarsCountLabel) {
               sdStarsCountLabel.textContent = "10 Bintang ⭐";
@@ -668,23 +784,6 @@ import { getState, setState } from './store.js';
 
     // TAB 4: DISKUSI (Kuliah Only)
     else if (activeTab === 'diskusi') {
-      const getForumMessages = () => {
-        const key = `forum-course-${course.id}`;
-        const raw = getState(key);
-        if (raw) return raw;
-
-        // Save default academic forum messages
-        const defaultMessages = [
-          { name: course.teacher, role: 'Pengajar', text: 'Selamat siang rekan-rekan mahasiswa. Silakan unggah laporan pengerjaan dokumen SRS Bab 3 kelompok Anda pada tenggat dropbox yang telah diaktifkan hari ini. Pastikan berkas sesuai standar format IEEE.', time: '11:15 WIB' },
-          { name: 'Nabila Putri', role: 'Mahasiswa', text: 'Selamat siang Pak. Izin bertanya, untuk pemodelan UML apakah harus dijabarkan secara rinci sampai ke sequence diagram atau cukup structural diagram saja?', time: '11:32 WIB' },
-          { name: course.teacher, role: 'Pengajar', text: 'Sequence diagram wajib dijabarkan terperinci untuk usecase skenario utama yang memiliki kompleksitas tinggi. Untuk usecase pelengkap cukup class diagram saja.', time: '11:40 WIB' }
-        ];
-        setState(key, defaultMessages);
-        return defaultMessages;
-      };
-
-      const messages = getForumMessages();
-
       let forumHTML = `
         <div class="bg-white border border-surface-200 rounded-2xl p-5 shadow-sm space-y-4 flex flex-col min-h-[380px]">
           <h3 class="font-bold text-surface-900 text-base border-b border-surface-100 pb-3 flex items-center gap-2">
@@ -694,26 +793,6 @@ import { getState, setState } from './store.js';
           <!-- Chat messages area -->
           <div id="forum-thread" class="flex-1 space-y-4 max-h-[250px] overflow-y-auto pr-1">
       `;
-
-      messages.forEach(msg => {
-        const isTeacher = msg.role === 'Pengajar';
-        const roleBadge = isTeacher 
-          ? 'bg-red-50 text-red-600 border-red-100'
-          : 'bg-indigo-50 text-indigo-600 border-indigo-100';
-
-        forumHTML += `
-          <div class="p-3 bg-surface-50 rounded-xl space-y-1.5 border border-surface-100">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-xs text-surface-900">${msg.name}</span>
-                <span class="inline-flex items-center text-[9px] font-bold border px-1.5 py-0.5 rounded-full ${roleBadge}">${msg.role}</span>
-              </div>
-              <span class="text-[10px] text-surface-400 font-semibold">${msg.time}</span>
-            </div>
-            <p class="text-xs text-surface-700 leading-relaxed">${msg.text}</p>
-          </div>
-        `;
-      });
 
       forumHTML += `
           </div>
@@ -728,7 +807,7 @@ import { getState, setState } from './store.js';
             />
             <button
               id="send-forum-btn"
-              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition-colors cursor-pointer text-sm flex items-center justify-center gap-1.5"
+              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-md active:scale-98 transition-colors cursor-pointer text-sm flex items-center justify-center gap-1.5 border-none"
             >
               <span>Kirim</span>
               <i data-lucide="send" class="w-3.5 h-3.5"></i>
@@ -738,39 +817,33 @@ import { getState, setState } from './store.js';
       `;
 
       tabContent.innerHTML = forumHTML;
+      renderForumThread();
 
-      // Handle chat sending
       const forumInput = document.getElementById('forum-input');
       const sendForumBtn = document.getElementById('send-forum-btn');
 
-      const sendMsg = () => {
+      const sendMsg = async () => {
         if (!forumInput) return;
         const text = forumInput.value.trim();
         if (!text) return;
 
-        const currentHour = String(new Date().getHours()).padStart(2, '0');
-        const currentMin = String(new Date().getMinutes()).padStart(2, '0');
-        const timeStr = `${currentHour}:${currentMin} WIB`;
-
-        const newMsg = {
-          name: username,
-          role: 'Mahasiswa',
-          text,
-          time: timeStr
-        };
-
-        const list = getForumMessages();
-        list.push(newMsg);
-        setState(`forum-course-${course.id}`, list);
-
         forumInput.value = '';
-        renderTabContent();
+
+        const senderRole = eduLevel === 'sd' ? 'Siswa' : (eduLevel === 'kuliah' ? 'Mahasiswa' : 'Siswa');
         
-        // Scroll to bottom
-        setTimeout(() => {
-          const thread = document.getElementById('forum-thread');
-          if (thread) thread.scrollTop = thread.scrollHeight;
-        }, 50);
+        try {
+          await supabase
+            .from('forum_messages')
+            .insert({
+              course_id: course.id,
+              user_id: userId,
+              sender_name: username,
+              sender_role: senderRole,
+              message_text: text
+            });
+        } catch (e) {
+          console.error('Failed to send forum message to Supabase:', e);
+        }
       };
 
       if (sendForumBtn) sendForumBtn.addEventListener('click', sendMsg);
