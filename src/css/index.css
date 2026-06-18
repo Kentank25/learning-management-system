@@ -167,12 +167,20 @@ body {
 /* Heavy backdrop blur for main structural overlays */
 aside.glass-panel,
 header.glass-panel,
-.glass-panel.dropdown-menu,
-#buddy-chat-window.glass-panel,
 .modal-content.glass-panel {
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   background: rgba(255, 255, 255, 0.72);
+}
+
+/* High contrast glassmorphism for floating dropdowns and chat window to prevent overlap confusion */
+.glass-panel.dropdown-menu,
+#buddy-chat-window.glass-panel {
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 /* Background Blobs Styling */

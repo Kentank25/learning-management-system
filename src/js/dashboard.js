@@ -184,12 +184,23 @@ import { supabase } from './supabaseClient.js';
   if (scheduleContainer) {
     scheduleContainer.innerHTML = '';
     currentSchedule.items.forEach((item, idx) => {
+      const isFirst = idx === 0;
       const isLast = idx === currentSchedule.items.length - 1;
       const statusBadge = item.statusType === 'active' 
         ? `<span class="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded font-medium">Sedang Berlangsung</span>`
         : `<span class="bg-surface-100 text-surface-600 text-xs px-2 py-0.5 rounded font-medium">Akan Datang</span>`;
       
-      const lineClass = isLast ? '' : '<div class="w-0.5 h-full bg-surface-200 absolute top-3"></div>';
+      let lineClass = '';
+      if (currentSchedule.items.length > 1) {
+        if (isFirst) {
+          lineClass = '<div class="w-0.5 bg-surface-200 absolute top-1/2 bottom-[-16px] left-1/2 -translate-x-1/2 z-0"></div>';
+        } else if (isLast) {
+          lineClass = '<div class="w-0.5 bg-surface-200 absolute top-0 bottom-1/2 left-1/2 -translate-x-1/2 z-0"></div>';
+        } else {
+          lineClass = '<div class="w-0.5 bg-surface-200 absolute top-0 bottom-[-16px] left-1/2 -translate-x-1/2 z-0"></div>';
+        }
+      }
+
       const itemBorderColor = eduLevel === 'sd' ? 'hover:border-sky-300' : (eduLevel === 'kuliah' ? 'hover:border-indigo-300' : 'hover:border-accent-300');
       const timeTextColor = eduLevel === 'sd' ? 'text-sky-600' : (eduLevel === 'kuliah' ? 'text-indigo-600' : 'text-accent-600');
       const dotBgColor = item.statusType === 'active' 
@@ -202,7 +213,7 @@ import { supabase } from './supabaseClient.js';
 
       const timelineHTML = `
         <div class="flex gap-4 relative">
-          <div class="flex flex-col items-center">
+          <div class="flex flex-col items-center justify-center flex-shrink-0 relative w-6 self-stretch mb-4">
             <div class="w-3 h-3 rounded-full ${dotBgColor} z-10 ring-4 ring-white"></div>
             ${lineClass}
           </div>

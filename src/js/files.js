@@ -341,12 +341,39 @@ import { supabase } from './supabaseClient.js';
         ? (selectedFile.size / (1024 * 1024)).toFixed(1) + ' MB'
         : (selectedFile.size / 1024).toFixed(0) + ' KB';
 
-      let type = 'file';
+      let type = 'doc'; // Default ke 'doc' (kategori dokumen umum)
       const name = selectedFile.name.toLowerCase();
-      if (name.endsWith('.pdf')) type = 'pdf';
-      else if (name.endsWith('.doc') || name.endsWith('.docx')) type = 'doc';
-      else if (name.endsWith('.sql') || name.endsWith('.html') || name.endsWith('.css') || name.endsWith('.js')) type = 'code';
-      else if (name.endsWith('.zip') || name.endsWith('.rar')) type = 'archive';
+      if (name.endsWith('.pdf')) {
+        type = 'pdf';
+      } else if (
+        name.endsWith('.doc') || 
+        name.endsWith('.docx') || 
+        name.endsWith('.xls') || 
+        name.endsWith('.xlsx') || 
+        name.endsWith('.ppt') || 
+        name.endsWith('.pptx') || 
+        name.endsWith('.txt')
+      ) {
+        type = 'doc';
+      } else if (
+        name.endsWith('.sql') || 
+        name.endsWith('.html') || 
+        name.endsWith('.css') || 
+        name.endsWith('.js') || 
+        name.endsWith('.json') || 
+        name.endsWith('.py') || 
+        name.endsWith('.cpp')
+      ) {
+        type = 'code';
+      } else if (
+        name.endsWith('.zip') || 
+        name.endsWith('.rar') || 
+        name.endsWith('.7z') || 
+        name.endsWith('.tar') || 
+        name.endsWith('.gz')
+      ) {
+        type = 'archive';
+      }
 
       // Set Loading State
       uploadTrigger.setAttribute('disabled', 'true');
@@ -357,13 +384,18 @@ import { supabase } from './supabaseClient.js';
       try {
         const storagePath = `${userId}/${eduLevel}/${Date.now()}_${selectedFile.name}`;
 
+        console.log('Mengunggah berkas ke Storage path:', storagePath);
         // Upload physical file to Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('user-documents')
           .upload(storagePath, selectedFile);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Detail Error Storage:', uploadError);
+          throw new Error(`[Storage] ${uploadError.message || JSON.stringify(uploadError)}`);
+        }
 
+        console.log('Berhasil mengunggah ke Storage. Menyimpan metadata ke DB...');
         // Insert metadata row to public.user_files
         const { data: dbData, error: dbError } = await supabase
           .from('user_files')
@@ -380,7 +412,10 @@ import { supabase } from './supabaseClient.js';
           .select()
           .single();
 
-        if (dbError) throw dbError;
+        if (dbError) {
+          console.error('Detail Error Database:', dbError);
+          throw new Error(`[Database] ${dbError.message || JSON.stringify(dbError)}`);
+        }
 
         if (dbData) {
           files.unshift(dbData);
