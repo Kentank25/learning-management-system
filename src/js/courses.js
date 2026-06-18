@@ -1,4 +1,4 @@
-import { sidebarTexts } from './db.js';
+import { sidebarTexts, historyCoursesData } from './db.js';
 import { getState } from './store.js';
 import { supabase } from './supabaseClient.js';
 
@@ -113,6 +113,11 @@ import { supabase } from './supabaseClient.js';
     } catch (e) {
       console.error('Failed to load courses from Supabase:', e);
     }
+  }
+
+  // Fallback to static local data if Supabase has no historical courses
+  if (historyCoursesGrouped.length === 0) {
+    historyCoursesGrouped = historyCoursesData[eduLevel] || [];
   }
 
   const gridContainer = document.getElementById('courses-grid');

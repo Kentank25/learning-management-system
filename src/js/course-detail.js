@@ -1,4 +1,4 @@
-import { sidebarTexts } from './db.js';
+import { sidebarTexts, historyCoursesData } from './db.js';
 import { getState, setState } from './store.js';
 import { supabase } from './supabaseClient.js';
 
@@ -43,6 +43,43 @@ import { supabase } from './supabaseClient.js';
           modules: (c.course_modules || []).sort((a, b) => a.sequence_number - b.sequence_number)
         };
         archivePeriodInfo = { period: c.period, year: c.academic_year };
+      } else {
+        // Fallback to static historyCoursesData from db.js if not found in Supabase
+        const levels = ['sd', 'smk', 'kuliah'];
+        let foundCourse = null;
+        let foundPeriod = null;
+        for (const lvl of levels) {
+          const periods = historyCoursesData[lvl] || [];
+          for (const p of periods) {
+            const match = p.courses.find(item => item.id === courseId);
+            if (match) {
+              foundCourse = match;
+              foundPeriod = p;
+              break;
+            }
+          }
+          if (foundCourse) break;
+        }
+
+        if (foundCourse) {
+          course = {
+            id: foundCourse.id,
+            title: foundCourse.title,
+            teacher: foundCourse.teacher,
+            final_score: foundCourse.finalScore,
+            grade_letter: foundCourse.gradeLetter,
+            color_class: foundCourse.colorClass,
+            icon: foundCourse.icon,
+            tag: foundCourse.tag,
+            description: foundCourse.description,
+            modules: (foundCourse.modules || []).map((m, idx) => ({
+              id: 9000 + idx, // dummy ID
+              title: m.title,
+              completed: m.completed
+            }))
+          };
+          archivePeriodInfo = { period: foundPeriod.period, year: foundPeriod.year };
+        }
       }
     } else {
       // Fetch active course

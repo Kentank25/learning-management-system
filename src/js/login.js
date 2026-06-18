@@ -19,16 +19,39 @@ document.addEventListener('DOMContentLoaded', () => {
       .join(' ');
   };
 
-  // Helper to detect education level from email domain
+  // Helper to detect education level from email (checks prefix/alias and domain)
   const detectLevelFromEmail = (email) => {
-    const domain = email.split('@')[1] || '';
-    const lowerDomain = domain.toLowerCase();
+    const lowerEmail = email.toLowerCase();
     
-    if (lowerDomain.includes('sd.')) {
+    // Check specific domains first
+    if (lowerEmail.endsWith('@sd.sekolahmu.sch.id')) {
       return 'sd';
-    } else if (lowerDomain.includes('kuliah.') || lowerDomain.includes('univ.') || lowerDomain.includes('ac.id')) {
+    }
+    if (lowerEmail.endsWith('@univ.sekolahmu.sch.id')) {
       return 'kuliah';
-    } else if (lowerDomain.includes('smk.') || lowerDomain.includes('smp.') || lowerDomain.includes('sma.')) {
+    }
+    if (lowerEmail.endsWith('@smk.sekolahmu.sch.id') || lowerEmail.endsWith('@smp.sekolahmu.sch.id')) {
+      return 'smk';
+    }
+    
+    // Fallback search patterns (aliases / legacy format)
+    if (lowerEmail.includes('sd.') || lowerEmail.includes('+sd') || lowerEmail.includes('.sd')) {
+      return 'sd';
+    } else if (
+      lowerEmail.includes('kuliah.') || 
+      lowerEmail.includes('univ.') || 
+      lowerEmail.includes('ac.id') || 
+      lowerEmail.includes('+kuliah') || 
+      lowerEmail.includes('.kuliah')
+    ) {
+      return 'kuliah';
+    } else if (
+      lowerEmail.includes('smk.') || 
+      lowerEmail.includes('smp.') || 
+      lowerEmail.includes('sma.') || 
+      lowerEmail.includes('+smk') || 
+      lowerEmail.includes('.smk')
+    ) {
       return 'smk';
     }
     return 'smk'; // Default fallback
