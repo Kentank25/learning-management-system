@@ -7,19 +7,24 @@ import { getState } from '../store.js';
 export function renderHeader() {
   const username = getState('username', 'Keane');
   const eduLevel = getState('edu-level', 'smk');
+  const isAdmin = getState('is-admin') === true;
   
   let avatarColor = '2563eb'; // Default blue for SMK
   let roleName = 'Siswa Kejuruan RPL 💻';
   
-  if (eduLevel === 'sd') {
-    avatarColor = '0ea5e9'; // Sky blue for SD
+  if (isAdmin) {
+    avatarColor = '9333ea'; // Purple 600 untuk Admin
+    roleName = 'Administrator Sistem 🛡️';
+  } else if (eduLevel === 'sd') {
+    avatarColor = '0ea5e9'; // Sky blue untuk SD
     roleName = 'Murid Sekolah Dasar 🌟';
   } else if (eduLevel === 'kuliah') {
-    avatarColor = '6366f1'; // Indigo for College
+    avatarColor = '6366f1'; // Indigo untuk College
     roleName = 'Mahasiswa Universitas 🎓';
   }
   
-  const profileImgSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=dbeafe&color=${avatarColor}`;
+  const avatarBg = isAdmin ? 'f3e8ff' : 'dbeafe'; // Background purple 100 untuk avatar admin
+  const profileImgSrc = `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=${avatarBg}&color=${avatarColor}`;
   const isSD = eduLevel === 'sd';
 
   return `
@@ -31,8 +36,8 @@ export function renderHeader() {
         <i data-lucide="menu" class="w-5 h-5"></i>
       </button>
       
-      <!-- Search Bar (hidden in SD) -->
-      ${!isSD ? `
+      <!-- Search Bar (hidden in SD & Admin) -->
+      ${(!isSD && !isAdmin) ? `
       <div class="hidden sm:flex items-center relative">
         <i data-lucide="search" class="w-4 h-4 absolute left-3 text-surface-400"></i>
         <input

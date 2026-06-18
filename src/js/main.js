@@ -134,6 +134,11 @@ import { supabase } from './supabaseClient.js';
   const markAllReadBtn = document.getElementById('mark-all-read');
 
   const notificationsData = {
+    admin: [
+      { id: 1, text: 'Log Keamanan: Aturan database trigger universal admin telah aktif. 🛡️', read: false, time: 'Baru saja' },
+      { id: 2, text: 'Sistem mendeteksi 2 pendaftaran pengguna baru hari ini. 👥', read: false, time: '2 jam yang lalu' },
+      { id: 3, text: 'Penyimpanan berkas bucket `user-documents` berjalan aman. 📂', read: true, time: 'Kemarin' }
+    ],
     sd: [
       { id: 1, text: 'Piko lapar nih! Yuk selesaikan kuis hari ini untuk kumpulkan Bintang! 🦖⭐', read: false, time: 'Baru saja' },
       { id: 2, text: 'Tugas kelas menggambar rumah impian belum dikirim. Ayo selesaikan! 🎨', read: false, time: '1 jam yang lalu' }
@@ -152,7 +157,7 @@ import { supabase } from './supabaseClient.js';
     if (!notificationList) return;
     notificationList.innerHTML = '';
     
-    const items = notificationsData[eduLevel] || [];
+    const items = isAdmin ? (notificationsData.admin || []) : (notificationsData[eduLevel] || []);
     let hasUnread = false;
 
     if (items.length === 0) {
@@ -168,7 +173,7 @@ import { supabase } from './supabaseClient.js';
     items.forEach(notif => {
       if (!notif.read) hasUnread = true;
       const readBg = notif.read ? 'bg-white' : 'bg-surface-50 border-accent-100';
-      const indicatorColor = eduLevel === 'sd' ? 'bg-sky-500' : (eduLevel === 'kuliah' ? 'bg-indigo-600' : 'bg-amber-500');
+      const indicatorColor = isAdmin ? 'bg-purple-600' : (eduLevel === 'sd' ? 'bg-sky-500' : (eduLevel === 'kuliah' ? 'bg-indigo-600' : 'bg-amber-500'));
       const dot = notif.read ? '' : `<span class="w-1.5 h-1.5 rounded-full ${indicatorColor} shrink-0 mt-1.5"></span>`;
       
       const notifHTML = `
@@ -201,7 +206,7 @@ import { supabase } from './supabaseClient.js';
 
   if (markAllReadBtn) {
     markAllReadBtn.addEventListener('click', () => {
-      const items = notificationsData[eduLevel] || [];
+      const items = isAdmin ? (notificationsData.admin || []) : (notificationsData[eduLevel] || []);
       items.forEach(n => n.read = true);
       renderNotifications();
     });
