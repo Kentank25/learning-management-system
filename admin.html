@@ -67,12 +67,31 @@
                 Kelola hak akses administrator, peran pengguna, dan jenjang pendidikan siswa SekolahMu LMS.
               </p>
             </div>
-            <button
-              id="open-add-user-btn"
-              class="px-4 py-2.5 bg-accent-500 hover:bg-accent-600 text-surface-900 rounded-xl text-sm font-bold border-none cursor-pointer transition-all flex items-center justify-center gap-2 shadow-sm shrink-0"
-            >
-              <i data-lucide="user-plus" class="w-4 h-4"></i>
-              <span>Tambah Pengguna</span>
+            <div class="flex gap-2 shrink-0">
+              <button
+                id="open-add-user-btn"
+                class="px-4 py-2.5 bg-accent-500 hover:bg-accent-600 text-surface-900 rounded-xl text-sm font-bold border-none cursor-pointer transition-all flex items-center justify-center gap-2 shadow-sm"
+              >
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                <span>Tambah Pengguna</span>
+              </button>
+              <button
+                id="open-add-course-btn"
+                class="hidden px-4 py-2.5 bg-accent-500 hover:bg-accent-600 text-surface-900 rounded-xl text-sm font-bold border-none cursor-pointer transition-all flex items-center justify-center gap-2 shadow-sm animate-fade-in"
+              >
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>Tambah Kelas Baru</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab Navigation -->
+          <div class="flex border-b border-surface-200/50 gap-4 mb-2">
+            <button id="tab-users" class="px-4 py-2 text-sm font-bold border-b-2 border-accent-500 text-accent-600 transition-all cursor-pointer bg-transparent border-t-none border-x-none pb-2">
+              Kelola Pengguna
+            </button>
+            <button id="tab-courses" class="px-4 py-2 text-sm font-bold border-b-2 border-transparent text-surface-500 hover:text-surface-800 transition-all cursor-pointer bg-transparent border-t-none border-x-none pb-2">
+              Kelola Kelas / Kursus
             </button>
           </div>
 
@@ -159,75 +178,141 @@
             </div>
           </div>
 
-          <!-- Controls Panel (Search & Filters) -->
-          <div class="glass-panel p-5 rounded-2xl border border-white/30 flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center shadow-sm">
-            <!-- Search -->
-            <div class="relative flex items-center flex-1 max-w-md">
-              <i data-lucide="search" class="w-4 h-4 absolute left-3.5 text-surface-400"></i>
-              <input
-                type="text"
-                id="search-users"
-                placeholder="Cari pengguna berdasarkan nama atau email..."
-                class="w-full pl-10 pr-4 py-2.5 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all shadow-sm"
-              />
-            </div>
-
-            <!-- Filters -->
-            <div class="flex flex-wrap items-center gap-3">
-              <!-- Filter Jenjang -->
-              <div class="flex items-center gap-2">
-                <label for="filter-level" class="text-xs font-bold text-surface-500 uppercase tracking-wide">Jenjang:</label>
-                <select
-                  id="filter-level"
-                  class="px-3 py-2 bg-white/60 border border-surface-200/50 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-accent-100 transition-all cursor-pointer"
-                >
-                  <option value="all">Semua Jenjang</option>
-                  <option value="sd">Sekolah Dasar (SD)</option>
-                  <option value="smk">Sekolah Menengah (SMK)</option>
-                  <option value="kuliah">Kuliah / Universitas</option>
-                </select>
+          <!-- Tab 1: Users Content -->
+          <div id="users-tab-content" class="space-y-6">
+            <!-- Controls Panel (Search & Filters) -->
+            <div class="glass-panel p-5 rounded-2xl border border-white/30 flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center shadow-sm">
+              <!-- Search -->
+              <div class="relative flex items-center flex-1 max-w-md">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3.5 text-surface-400"></i>
+                <input
+                  type="text"
+                  id="search-users"
+                  placeholder="Cari pengguna berdasarkan nama atau email..."
+                  class="w-full pl-10 pr-4 py-2.5 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all shadow-sm"
+                />
               </div>
 
-              <!-- Filter Peran -->
-              <div class="flex items-center gap-2">
-                <label for="filter-role" class="text-xs font-bold text-surface-500 uppercase tracking-wide">Peran:</label>
-                <select
-                  id="filter-role"
-                  class="px-3 py-2 bg-white/60 border border-surface-200/50 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-accent-100 transition-all cursor-pointer"
-                >
-                  <option value="all">Semua Peran</option>
-                  <option value="admin">Administrator</option>
-                  <option value="user">Siswa/Mahasiswa</option>
-                </select>
+              <!-- Filters -->
+              <div class="flex flex-wrap items-center gap-3">
+                <!-- Filter Jenjang -->
+                <div class="flex items-center gap-2">
+                  <label for="filter-level" class="text-xs font-bold text-surface-500 uppercase tracking-wide">Jenjang:</label>
+                  <select
+                    id="filter-level"
+                    class="px-3 py-2 bg-white/60 border border-surface-200/50 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-accent-100 transition-all cursor-pointer"
+                  >
+                    <option value="all">Semua Jenjang</option>
+                    <option value="sd">Sekolah Dasar (SD)</option>
+                    <option value="smk">Sekolah Menengah (SMK)</option>
+                    <option value="kuliah">Kuliah / Universitas</option>
+                  </select>
+                </div>
+
+                <!-- Filter Peran -->
+                <div class="flex items-center gap-2">
+                  <label for="filter-role" class="text-xs font-bold text-surface-500 uppercase tracking-wide">Peran:</label>
+                  <select
+                    id="filter-role"
+                    class="px-3 py-2 bg-white/60 border border-surface-200/50 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-accent-100 transition-all cursor-pointer"
+                  >
+                    <option value="all">Semua Peran</option>
+                    <option value="admin">Administrator</option>
+                    <option value="user">Siswa/Mahasiswa</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Users List Card -->
+            <div class="glass-panel rounded-2xl border border-white/30 overflow-hidden shadow-sm">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="border-b border-surface-200/50 bg-white/30 text-surface-500 text-xs font-bold uppercase tracking-wider">
+                      <th class="px-6 py-4">Nama Pengguna</th>
+                      <th class="px-6 py-4">Alamat Email</th>
+                      <th class="px-6 py-4">Jenjang Pendidikan</th>
+                      <th class="px-6 py-4">Status Administrator</th>
+                      <th class="px-6 py-4 text-center">Aksi / Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-table-body" class="divide-y divide-surface-100/50 text-sm">
+                    <!-- Loading State -->
+                    <tr>
+                      <td colspan="5" class="px-6 py-12 text-center text-surface-500">
+                        <div class="flex flex-col items-center gap-3">
+                          <i data-lucide="loader-2" class="w-8 h-8 text-accent-500 animate-spin"></i>
+                          <span class="font-medium">Memuat data pengguna...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
 
-          <!-- Users List Card -->
-          <div class="glass-panel rounded-2xl border border-white/30 overflow-hidden shadow-sm">
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="border-b border-surface-200/50 bg-white/30 text-surface-500 text-xs font-bold uppercase tracking-wider">
-                    <th class="px-6 py-4">Nama Pengguna</th>
-                    <th class="px-6 py-4">Alamat Email</th>
-                    <th class="px-6 py-4">Jenjang Pendidikan</th>
-                    <th class="px-6 py-4">Status Administrator</th>
-                    <th class="px-6 py-4 text-center">Aksi / Status</th>
-                  </tr>
-                </thead>
-                <tbody id="users-table-body" class="divide-y divide-surface-100/50 text-sm">
-                  <!-- Loading State -->
-                  <tr>
-                    <td colspan="5" class="px-6 py-12 text-center text-surface-500">
-                      <div class="flex flex-col items-center gap-3">
-                        <i data-lucide="loader-2" class="w-8 h-8 text-accent-500 animate-spin"></i>
-                        <span class="font-medium">Memuat data pengguna...</span>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          <!-- Tab 2: Courses Content -->
+          <div id="courses-tab-content" class="space-y-6 hidden">
+            <!-- Controls Panel (Search & Filters) -->
+            <div class="glass-panel p-5 rounded-2xl border border-white/30 flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center shadow-sm">
+              <!-- Search -->
+              <div class="relative flex items-center flex-1 max-w-md">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3.5 text-surface-400"></i>
+                <input
+                  type="text"
+                  id="search-courses"
+                  placeholder="Cari kelas berdasarkan judul atau pengajar..."
+                  class="w-full pl-10 pr-4 py-2.5 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all shadow-sm"
+                />
+              </div>
+
+              <!-- Filters -->
+              <div class="flex flex-wrap items-center gap-3">
+                <!-- Filter Jenjang Kelas -->
+                <div class="flex items-center gap-2">
+                  <label for="filter-course-level" class="text-xs font-bold text-surface-500 uppercase tracking-wide">Jenjang:</label>
+                  <select
+                    id="filter-course-level"
+                    class="px-3 py-2 bg-white/60 border border-surface-200/50 rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-accent-100 transition-all cursor-pointer"
+                  >
+                    <option value="all">Semua Jenjang</option>
+                    <option value="sd">Sekolah Dasar (SD)</option>
+                    <option value="smk">Sekolah Menengah (SMK)</option>
+                    <option value="kuliah">Kuliah / Universitas</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Courses List Card -->
+            <div class="glass-panel rounded-2xl border border-white/30 overflow-hidden shadow-sm">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="border-b border-surface-200/50 bg-white/30 text-surface-500 text-xs font-bold uppercase tracking-wider">
+                      <th class="px-6 py-4">Nama Kelas / Mata Kuliah</th>
+                      <th class="px-6 py-4">Pengajar / Dosen</th>
+                      <th class="px-6 py-4">Jenjang</th>
+                      <th class="px-6 py-4">Informasi/Tag</th>
+                      <th class="px-6 py-4">Ikon & Warna</th>
+                      <th class="px-6 py-4 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="courses-table-body" class="divide-y divide-surface-100/50 text-sm">
+                    <!-- Loading State -->
+                    <tr>
+                      <td colspan="6" class="px-6 py-12 text-center text-surface-500">
+                        <div class="flex flex-col items-center gap-3">
+                          <i data-lucide="loader-2" class="w-8 h-8 text-accent-500 animate-spin"></i>
+                          <span class="font-medium">Memuat data kelas...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
 
@@ -330,6 +415,148 @@
             >
               <i data-lucide="user-plus" class="w-4 h-4"></i>
               <span>Tambah User</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL TAMBAH/EDIT KELAS BARU -->
+    <div id="course-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+      <!-- Backdrop -->
+      <div id="course-modal-backdrop" class="fixed inset-0 bg-black/40 backdrop-blur-sm"></div>
+      
+      <!-- Modal Content -->
+      <div class="modal-content glass-panel border border-white/30 rounded-2xl shadow-xl w-full max-w-lg p-6 relative z-10 animate-fade-in mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-2">
+            <i data-lucide="plus-circle" id="course-modal-icon" class="w-6 h-6 text-accent-500"></i>
+            <h2 id="course-modal-title" class="text-base font-bold text-surface-900 font-display">Tambah Kelas Baru</h2>
+          </div>
+          <button id="close-course-modal" class="p-1.5 hover:bg-surface-100 text-surface-450 hover:text-surface-700 rounded-lg transition-colors border-none bg-transparent cursor-pointer">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <form id="course-form" class="space-y-4">
+          <input type="hidden" id="course-id" />
+          
+          <!-- Judul Kelas -->
+          <div>
+            <label for="course-title" class="block text-[10px] font-bold text-surface-600 mb-1.5 uppercase tracking-wide">Nama / Judul Kelas</label>
+            <input
+              type="text"
+              id="course-title"
+              required
+              placeholder="e.g. Pemrograman Web Lanjut, Matematika Dasar..."
+              class="w-full px-3 py-2 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all"
+            />
+          </div>
+
+          <!-- Pengajar -->
+          <div>
+            <label for="course-teacher" class="block text-[10px] font-bold text-surface-600 mb-1.5 uppercase tracking-wide">Nama Pengajar / Dosen</label>
+            <input
+              type="text"
+              id="course-teacher"
+              required
+              placeholder="e.g. Dr. Budi Rahardjo, Ibu Siska, M.T..."
+              class="w-full px-3 py-2 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Jenjang -->
+            <div>
+              <label for="course-level" class="block text-[10px] font-bold text-surface-600 mb-1.5 uppercase tracking-wide">Jenjang Pendidikan</label>
+              <select
+                id="course-level"
+                required
+                class="w-full px-3 py-2 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all cursor-pointer font-semibold"
+              >
+                <option value="sd">Sekolah Dasar (SD)</option>
+                <option value="smk" selected>Sekolah Menengah (SMK)</option>
+                <option value="kuliah">Kuliah / Universitas</option>
+              </select>
+            </div>
+
+            <!-- Tag / Keterangan -->
+            <div>
+              <label for="course-tag" class="block text-[10px] font-bold text-surface-600 mb-1.5 uppercase tracking-wide">Tag / Keterangan Singkat</label>
+              <input
+                type="text"
+                id="course-tag"
+                required
+                placeholder="e.g. Kelas 4, Kelas XI, 3 SKS..."
+                class="w-full px-3 py-2 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <!-- Deskripsi Kelas -->
+          <div>
+            <label for="course-description" class="block text-[10px] font-bold text-surface-600 mb-1.5 uppercase tracking-wide">Deskripsi Pembelajaran</label>
+            <textarea
+              id="course-description"
+              rows="3"
+              placeholder="Jelaskan ringkasan materi pembelajaran atau pokok bahasan kelas ini..."
+              class="w-full px-3 py-2 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all resize-none"
+            ></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Ikon Kelas -->
+            <div>
+              <label for="course-icon" class="block text-[10px] font-bold text-surface-600 mb-1.5 uppercase tracking-wide">Representasi Ikon</label>
+              <select
+                id="course-icon"
+                required
+                class="w-full px-3 py-2 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all cursor-pointer font-semibold"
+              >
+                <option value="book-open">📖 Buku Pembelajaran (book-open)</option>
+                <option value="code">💻 Pemrograman / IT (code)</option>
+                <option value="cpu">⚙️ Sistem Komputer / Teknik (cpu)</option>
+                <option value="database">💾 Basis Data (database)</option>
+                <option value="terminal">🖥️ CLI / Algoritma (terminal)</option>
+                <option value="globe">🌐 Web / Komunikasi (globe)</option>
+                <option value="smile">🎨 Kreatif / SD (smile)</option>
+                <option value="graduation-cap">🎓 Akademik (graduation-cap)</option>
+              </select>
+            </div>
+
+            <!-- Gradasi Warna Kartu -->
+            <div>
+              <label for="course-color" class="block text-[10px] font-bold text-surface-600 mb-1.5 uppercase tracking-wide">Tema Warna Kartu</label>
+              <select
+                id="course-color"
+                required
+                class="w-full px-3 py-2 bg-white/60 border border-surface-200/50 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 rounded-xl text-sm outline-none transition-all cursor-pointer font-semibold"
+              >
+                <option value="from-sky-400 to-blue-600">Sky - Blue (Biru Cerah)</option>
+                <option value="from-indigo-600 to-violet-800">Indigo - Violet (Ungu Gelap)</option>
+                <option value="from-amber-500 to-orange-600">Amber - Orange (Kuning/Jingga)</option>
+                <option value="from-emerald-500 to-teal-700">Emerald - Teal (Hijau Toska)</option>
+                <option value="from-rose-500 to-pink-700">Rose - Pink (Merah Muda/Rose)</option>
+                <option value="from-slate-700 to-slate-900">Slate - Charcoal (Abu Gelap)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex gap-2 justify-end pt-3">
+            <button
+              type="button"
+              id="close-course-modal-btn"
+              class="px-4 py-2 bg-surface-100 hover:bg-surface-200 text-surface-700 rounded-xl text-sm font-bold border-none cursor-pointer transition-colors"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              id="save-course-btn"
+              class="px-4 py-2 bg-accent-500 hover:bg-accent-600 text-surface-900 rounded-xl text-sm font-bold border-none cursor-pointer transition-all flex items-center gap-1.5"
+            >
+              <i data-lucide="plus-circle" class="w-4 h-4"></i>
+              <span>Simpan Kelas</span>
             </button>
           </div>
         </form>

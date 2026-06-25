@@ -11,11 +11,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   const filterRole = document.getElementById('filter-role');
   const toastContainer = document.getElementById('toast-container');
 
+  // Elements for Courses Tab
+  const tabUsers = document.getElementById('tab-users');
+  const tabCourses = document.getElementById('tab-courses');
+  const usersTabContent = document.getElementById('users-tab-content');
+  const coursesTabContent = document.getElementById('courses-tab-content');
+  const openAddUserBtn = document.getElementById('open-add-user-btn');
+  const openAddCourseBtn = document.getElementById('open-add-course-btn');
+  const searchCoursesInput = document.getElementById('search-courses');
+  const filterCourseLevel = document.getElementById('filter-course-level');
+  const coursesTableBody = document.getElementById('courses-table-body');
+
   let allUsers = [];
   let filteredUsers = [];
   let allFiles = [];
+  let allCourses = [];
+  let filteredCourses = [];
   let currentUserId = null;
   let pendingUpdate = null;
+  let editingCourseId = null;
+  let activeTab = 'users';
 
   // Variabel Grafik modul
   let userDistributionChart = null;
@@ -540,7 +555,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 7. Modal Controls & Add User Logic
   const addUserModal = document.getElementById('add-user-modal');
-  const openAddUserBtn = document.getElementById('open-add-user-btn');
   const closeBtn = document.getElementById('close-modal-btn');
   const cancelBtn = document.getElementById('cancel-modal-btn');
   const backdrop = document.getElementById('modal-backdrop');
@@ -721,6 +735,366 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  // =====================================================
+  // KELOLA TABEL KELAS / MATA KULIAH (COURSES TAB LOGIC)
+  // =====================================================
+
+  const switchTab = (tab) => {
+    activeTab = tab;
+    if (tab === 'users') {
+      tabUsers.classList.add('border-accent-500', 'text-accent-600');
+      tabUsers.classList.remove('border-transparent', 'text-surface-500');
+      tabCourses.classList.add('border-transparent', 'text-surface-500');
+      tabCourses.classList.remove('border-accent-500', 'text-accent-600');
+      
+      usersTabContent.classList.remove('hidden');
+      coursesTabContent.classList.add('hidden');
+      
+      openAddUserBtn.classList.remove('hidden');
+      openAddCourseBtn.classList.add('hidden');
+    } else {
+      tabCourses.classList.add('border-accent-500', 'text-accent-600');
+      tabCourses.classList.remove('border-transparent', 'text-surface-500');
+      tabUsers.classList.add('border-transparent', 'text-surface-500');
+      tabUsers.classList.remove('border-accent-500', 'text-accent-600');
+      
+      coursesTabContent.classList.remove('hidden');
+      usersTabContent.classList.add('hidden');
+      
+      openAddCourseBtn.classList.remove('hidden');
+      openAddUserBtn.classList.add('hidden');
+      
+      // Ambil data kelas
+      loadCourses();
+    }
+  };
+
+  if (tabUsers && tabCourses) {
+    tabUsers.addEventListener('click', () => switchTab('users'));
+    tabCourses.addEventListener('click', () => switchTab('courses'));
+  }
+
+  // Load kelas dari Supabase
+  const loadCourses = async () => {
+    try {
+      if (coursesTableBody) {
+        coursesTableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-surface-500">
+              <div class="flex flex-col items-center gap-3">
+                <i data-lucide="loader-2" class="w-8 h-8 text-accent-500 animate-spin"></i>
+                <span class="font-medium">Memuat data kelas...</span>
+              </div>
+            </td>
+          </tr>
+        `;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      allCourses = data || [];
+      applyCoursesFilters();
+    } catch (err) {
+      console.error('Error loading courses:', err);
+      showToast('Gagal memuat daftar kelas: ' + err.message, 'error');
+      if (coursesTableBody) {
+        coursesTableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-red-500 font-semibold">
+              <i data-lucide="alert-circle" class="w-8 h-8 mx-auto mb-2"></i>
+              Gagal memuat data kelas. Silakan segarkan halaman.
+            </td>
+          </tr>
+        `;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    }
+  };
+
+  // Render tabel kelas
+  const renderCoursesTable = (coursesList) => {
+    if (!coursesTableBody) return;
+    coursesTableBody.innerHTML = '';
+
+    if (coursesList.length === 0) {
+      coursesTableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="px-6 py-12 text-center text-surface-450 font-medium">
+            Tidak ditemukan kelas yang sesuai dengan pencarian/filter.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    coursesList.forEach(course => {
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-white/20 transition-colors';
+      
+      const colorPreview = `
+        <div class="flex items-center gap-2">
+          <span class="w-5 h-5 rounded bg-gradient-to-tr ${course.color_class} shadow-sm border border-white/20"></span>
+          <code class="text-[10px] text-surface-500 font-mono">${course.icon}</code>
+        </div>
+      `;
+
+      row.innerHTML = `
+        <!-- Nama Kelas -->
+        <td class="px-6 py-4 font-semibold text-surface-850">
+          <div class="flex items-center gap-2.5">
+            <div class="p-2 rounded-lg bg-gradient-to-tr ${course.color_class} text-white">
+              <i data-lucide="${course.icon || 'book-open'}" class="w-4 h-4"></i>
+            </div>
+            <span>${course.title}</span>
+          </div>
+        </td>
+
+        <!-- Pengajar -->
+        <td class="px-6 py-4 text-surface-600 font-medium font-sans">
+          ${course.teacher}
+        </td>
+
+        <!-- Jenjang -->
+        <td class="px-6 py-4">
+          <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase rounded-full ${
+            course.edu_level === 'sd' ? 'bg-sky-100 text-sky-700' : (course.edu_level === 'kuliah' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700')
+          }">
+            ${course.edu_level === 'sd' ? 'SD' : (course.edu_level === 'kuliah' ? 'Kuliah' : 'SMK')}
+          </span>
+        </td>
+
+        <!-- Tag / Keterangan -->
+        <td class="px-6 py-4 text-surface-500 text-xs font-semibold">
+          ${course.tag || '-'}
+        </td>
+
+        <!-- Representasi Visual -->
+        <td class="px-6 py-4">
+          ${colorPreview}
+        </td>
+
+        <!-- Aksi Edit & Hapus -->
+        <td class="px-6 py-4 text-center">
+          <div class="flex items-center justify-center gap-1.5">
+            <button 
+              data-course-id="${course.id}" 
+              class="edit-course-btn p-1.5 hover:bg-accent-50 text-accent-650 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
+              title="Edit Kelas"
+            >
+              <i data-lucide="edit-3" class="w-4 h-4"></i>
+            </button>
+            <button 
+              data-course-id="${course.id}" 
+              class="delete-course-btn p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors cursor-pointer border-none bg-transparent"
+              title="Hapus Kelas"
+            >
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </td>
+      `;
+
+      coursesTableBody.appendChild(row);
+    });
+
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+    setupCoursesTableListeners();
+  };
+
+  // Filter & Search untuk Kelas
+  const applyCoursesFilters = () => {
+    const query = searchCoursesInput ? searchCoursesInput.value.toLowerCase().trim() : '';
+    const level = filterCourseLevel ? filterCourseLevel.value : 'all';
+
+    filteredCourses = allCourses.filter(c => {
+      const matchesSearch = 
+        c.title.toLowerCase().includes(query) || 
+        c.teacher.toLowerCase().includes(query) ||
+        (c.description && c.description.toLowerCase().includes(query));
+      
+      const matchesLevel = level === 'all' || c.edu_level === level;
+      return matchesSearch && matchesLevel;
+    });
+
+    renderCoursesTable(filteredCourses);
+  };
+
+  if (searchCoursesInput) searchCoursesInput.addEventListener('input', applyCoursesFilters);
+  if (filterCourseLevel) filterCourseLevel.addEventListener('change', applyCoursesFilters);
+
+  // Modal Kelas DOM & Handlers
+  const courseModal = document.getElementById('course-modal');
+  const courseForm = document.getElementById('course-form');
+  const courseModalTitle = document.getElementById('course-modal-title');
+  const courseModalIcon = document.getElementById('course-modal-icon');
+  const saveCourseBtn = document.getElementById('save-course-btn');
+  
+  const openCourseModal = (course = null) => {
+    if (course) {
+      // Mode Edit
+      editingCourseId = course.id;
+      courseModalTitle.textContent = 'Edit Kelas / Mata Pelajaran';
+      if (courseModalIcon) {
+        courseModalIcon.setAttribute('data-lucide', 'edit-3');
+        courseModalIcon.className = 'w-6 h-6 text-accent-500';
+      }
+      saveCourseBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Simpan Perubahan</span>`;
+      
+      document.getElementById('course-id').value = course.id;
+      document.getElementById('course-title').value = course.title;
+      document.getElementById('course-teacher').value = course.teacher;
+      document.getElementById('course-level').value = course.edu_level;
+      document.getElementById('course-tag').value = course.tag || '';
+      document.getElementById('course-description').value = course.description || '';
+      document.getElementById('course-icon').value = course.icon || 'book-open';
+      document.getElementById('course-color').value = course.color_class || 'from-sky-400 to-blue-600';
+    } else {
+      // Mode Tambah Baru
+      editingCourseId = null;
+      courseModalTitle.textContent = 'Tambah Kelas Baru';
+      if (courseModalIcon) {
+        courseModalIcon.setAttribute('data-lucide', 'plus-circle');
+        courseModalIcon.className = 'w-6 h-6 text-accent-500';
+      }
+      saveCourseBtn.innerHTML = `<i data-lucide="plus-circle" class="w-4 h-4"></i><span>Simpan Kelas</span>`;
+      
+      if (courseForm) courseForm.reset();
+      document.getElementById('course-id').value = '';
+    }
+
+    if (courseModal) courseModal.classList.remove('hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  };
+
+  const hideCourseModal = () => {
+    if (courseModal) courseModal.classList.add('hidden');
+    editingCourseId = null;
+  };
+
+  if (openAddCourseBtn) openAddCourseBtn.addEventListener('click', () => openCourseModal(null));
+  
+  const closeCourseModalBtns = document.querySelectorAll('#close-course-modal, #close-course-modal-btn, #course-modal-backdrop');
+  closeCourseModalBtns.forEach(btn => btn.addEventListener('click', hideCourseModal));
+
+  // Handle submit form kelas
+  if (courseForm) {
+    courseForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const title = document.getElementById('course-title').value.trim();
+      const teacher = document.getElementById('course-teacher').value.trim();
+      const level = document.getElementById('course-level').value;
+      const tag = document.getElementById('course-tag').value.trim();
+      const description = document.getElementById('course-description').value.trim();
+      const icon = document.getElementById('course-icon').value;
+      const color_class = document.getElementById('course-color').value;
+
+      saveCourseBtn.disabled = true;
+      saveCourseBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Menyimpan...`;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+
+      try {
+        const payload = {
+          title,
+          teacher,
+          edu_level: level,
+          tag,
+          description,
+          icon,
+          color_class,
+          is_active: true
+        };
+
+        if (editingCourseId) {
+          // Edit kelas di database
+          const { error } = await supabase
+            .from('courses')
+            .update(payload)
+            .eq('id', editingCourseId);
+
+          if (error) throw error;
+          showToast('Kelas berhasil diperbarui!', 'success');
+        } else {
+          // Tambah kelas baru di database
+          const { error } = await supabase
+            .from('courses')
+            .insert(payload);
+
+          if (error) throw error;
+          showToast('Kelas baru berhasil ditambahkan!', 'success');
+        }
+
+        hideCourseModal();
+        await loadCourses();
+      } catch (err) {
+        console.error('Failed to save course:', err);
+        showToast('Gagal menyimpan kelas: ' + err.message, 'error');
+      } finally {
+        saveCourseBtn.disabled = false;
+        if (editingCourseId) {
+          saveCourseBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Simpan Perubahan</span>`;
+        } else {
+          saveCourseBtn.innerHTML = `<i data-lucide="plus-circle" class="w-4 h-4"></i><span>Simpan Kelas</span>`;
+        }
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    });
+  }
+
+  // Edit & Hapus listeners di tabel kelas
+  const setupCoursesTableListeners = () => {
+    // Tombol Edit
+    const editBtns = document.querySelectorAll('.edit-course-btn');
+    editBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const courseId = btn.getAttribute('data-course-id');
+        const course = allCourses.find(c => c.id === parseInt(courseId));
+        if (course) {
+          openCourseModal(course);
+        }
+      });
+    });
+
+    // Tombol Hapus
+    const deleteBtns = document.querySelectorAll('.delete-course-btn');
+    deleteBtns.forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const courseId = btn.getAttribute('data-course-id');
+        const course = allCourses.find(c => c.id === parseInt(courseId));
+        if (!course) return;
+
+        if (confirm(`Apakah Anda yakin ingin menghapus kelas "${course.title}" secara permanen? Tindakan ini tidak dapat dibatalkan.`)) {
+          btn.disabled = true;
+          btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>`;
+          if (typeof lucide !== 'undefined') lucide.createIcons();
+
+          try {
+            const { error } = await supabase
+              .from('courses')
+              .delete()
+              .eq('id', course.id);
+
+            if (error) throw error;
+            showToast('Kelas berhasil dihapus!', 'success');
+            await loadCourses();
+          } catch (err) {
+            console.error('Failed to delete course:', err);
+            showToast('Gagal menghapus kelas: ' + err.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = `<i data-lucide="trash-2" class="w-4 h-4"></i>`;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          }
+        }
+      });
+    });
+  };
 
   // Initialize
   await loadUsers();

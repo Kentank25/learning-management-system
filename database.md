@@ -223,6 +223,10 @@ ALTER TABLE public.user_files ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow read access for authenticated users on courses" 
 ON public.courses FOR SELECT TO authenticated USING (true);
 
+CREATE POLICY "Allow all access for admins on courses" 
+ON public.courses FOR ALL TO authenticated 
+USING (public.is_admin()) WITH CHECK (public.is_admin());
+
 CREATE POLICY "Allow read access for authenticated users on modules" 
 ON public.course_modules FOR SELECT TO authenticated USING (true);
 
